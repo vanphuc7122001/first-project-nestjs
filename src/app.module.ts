@@ -6,6 +6,7 @@ import { AppService } from "./app.service";
 import { AuthModule } from "@modules/auth/auth.module";
 import { ConfigModule } from "@nestjs/config";
 import { ConfigSchema } from "@config/config.schema";
+import { EmailModule } from "@shared/email/email.module";
 import { Environment } from "@common/enums";
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "@shared/prisma/prisma.module";
@@ -25,6 +26,7 @@ import { UserModule } from "@modules/user/user.module";
     // Shared modules
     PrismaModule,
     ResponseModule,
+    EmailModule,
 
     // Feature modules
     AuthModule,

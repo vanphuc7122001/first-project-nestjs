@@ -1,5 +1,4 @@
 export class ResetPasswordDto {
-  id: string;
-  code: string;
-  password: string;
+  forgot_password_token: string;
+  new_password: string;
 }

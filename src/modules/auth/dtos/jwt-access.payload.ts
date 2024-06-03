@@ -3,8 +3,8 @@ export class JwtAccessPayload {
   email: string;
   firstName: string | null;
   lastName: string | null;
-  isAdmin: string;
+  isAdmin: boolean;
   adminStatus?: string;
   userStatus?: string;
-  isUser: string;
+  isUser: boolean;
 }

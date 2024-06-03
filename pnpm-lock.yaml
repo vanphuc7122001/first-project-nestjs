@@ -66,7 +66,7 @@ importers:
         specifier: ^2.1.35
         version: 2.1.35
       nodemailer:
-        specifier: ^6.9.4
+        specifier: ^6.9.13
         version: 6.9.13
       passport:
         specifier: ^0.6.0
@@ -127,7 +127,7 @@ importers:
         specifier: ^20.3.1
         version: 20.12.13
       '@types/nodemailer':
-        specifier: ^6.4.9
+        specifier: ^6.4.15
         version: 6.4.15
       '@types/passport-jwt':
         specifier: ^3.0.9

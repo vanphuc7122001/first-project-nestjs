@@ -1,4 +1,80 @@
-import { Controller } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from "@nestjs/common";
 
-@Controller()
-export class UserController {}
+import { UserSerivce } from "../services";
+import { BaseQueryParams } from "@common/dtos";
+import { JoiValidationPipe } from "@common/pipes";
+import { BaseQueryParamsValidator } from "@common/validators";
+import { ResponseService } from "@shared/response/response.service";
+import { Request } from "express";
+import { AdminJwtAccessAuthGuard } from "@modules/auth/guards/admin-jwt-access-auth.guard";
+import { CreateSubadminDto } from "../dtos";
+import {
+  CreateSubadminValidator,
+  UnBlockAccountValidator,
+} from "../validators";
+import { BlockAccountValidator } from "../validators/block-account.validator";
+import { BlockAccountDto } from "../dtos";
+import { RequestUser } from "@common/decorators";
+import { JwtAccessPayload } from "@modules/auth/dtos";
+
+@Controller("admin/users")
+export class UserController {
+  constructor(private readonly _userService: UserSerivce) {}
+
+  @UseGuards(AdminJwtAccessAuthGuard)
+  @Get()
+  async getUsers(
+    @Query(new JoiValidationPipe(BaseQueryParamsValidator))
+    query: BaseQueryParams,
+    @Req() req: Request
+  ) {
+    const { count, data } = await this._userService.findAll(query);
+    return ResponseService.paginateResponse({
+      count,
+      data,
+      query,
+      req,
+    });
+  }
+
+  @Post("create-subadmin")
+  @UseGuards(AdminJwtAccessAuthGuard)
+  createSubadmin(
+    @Body(new JoiValidationPipe(CreateSubadminValidator))
+    data: CreateSubadminDto
+  ) {
+    return this._userService.createSubadmin(data);
+  }
+
+  @Post("block")
+  @UseGuards(AdminJwtAccessAuthGuard)
+  blockSubAdminOrUser(
+    @Body(new JoiValidationPipe(BlockAccountValidator)) data: BlockAccountDto
+  ) {
+    return this._userService.blockSubaAdminOrUser(data);
+  }
+
+  @Post("unblock")
+  @UseGuards(AdminJwtAccessAuthGuard)
+  unBlockSubAdminOrUser(
+    @Body(new JoiValidationPipe(UnBlockAccountValidator)) data: BlockAccountDto
+  ) {
+    return this._userService.unBlockSubaAdminOrUser(data);
+  }
+
+  @Delete(":id")
+  @UseGuards(AdminJwtAccessAuthGuard)
+  async removeAccount(@RequestUser() user: JwtAccessPayload) {
+    const { id } = user;
+    return await this._userService.removeAccount(id);
+  }
+}

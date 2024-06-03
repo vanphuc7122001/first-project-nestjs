@@ -1,5 +1,9 @@
 import { AdminAuthController, AuthController } from "./controllers";
-import { JwtAccessStrategy, LocalStrategy } from "./strategies";
+import {
+  AdminJwtAccessStrategy,
+  JwtAccessStrategy,
+  LocalStrategy,
+} from "./strategies";
 
 import { AuthService } from "./services";
 import { Module } from "@nestjs/common";
@@ -13,7 +17,7 @@ import { UserModule } from "@modules/user/user.module";
     // UserSerivce,
     // Passport strategies
     JwtAccessStrategy,
-    // JwtRefreshStrategy,
+    AdminJwtAccessStrategy,
     LocalStrategy,
 
     // Repositories

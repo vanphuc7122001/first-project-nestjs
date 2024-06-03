@@ -4,9 +4,10 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
-} from '@nestjs/common';
-import { HttpAdapterHost } from '@nestjs/core';
-import { ResponseService } from '@shared/response/response.service';
+} from "@nestjs/common";
+
+import { HttpAdapterHost } from "@nestjs/core";
+import { ResponseService } from "@shared/response/response.service";
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {

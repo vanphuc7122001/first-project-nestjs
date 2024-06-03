@@ -1,4 +1,4 @@
 export class ChangePasswordDto {
-  currentPassword?: string;
-  password: string;
+  oldPassword?: string;
+  newPassword: string;
 }
