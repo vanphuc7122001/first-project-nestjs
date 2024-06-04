@@ -6,5 +6,7 @@ export class JwtAccessPayload {
   isAdmin: boolean;
   adminStatus?: string;
   userStatus?: string;
+  salerStatus?: string;
   isUser: boolean;
+  isSaler: boolean;
 }

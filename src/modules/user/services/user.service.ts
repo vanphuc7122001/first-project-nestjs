@@ -9,7 +9,7 @@ import {
 import { AccountStatus } from "./../../auth/enums";
 import { BaseQueryParams } from "@common/dtos";
 import { BlockAccountDto } from "../dtos";
-import { CreateSubadminDto } from "../dtos";
+import { CreateSalerDto } from "../dtos";
 import { Prisma } from "@prisma/client";
 import { UserRepository } from "../repositories";
 
@@ -17,7 +17,7 @@ import { UserRepository } from "../repositories";
 export class UserSerivce {
   constructor(private readonly _userRepository: UserRepository) {}
 
-  async createSubadmin(data: CreateSubadminDto) {
+  async createSaler(data: CreateSalerDto) {
     const { email, password, firstName, lastName } = data;
     const foundUser = await this.findUserByEmail(email);
 
@@ -32,32 +32,33 @@ export class UserSerivce {
       firstName,
       lastName,
       password: await bcrypt.hash(password, salt),
-      adminStatus: AccountStatus.ACTIVE,
-      userStatus: AccountStatus.BLOCK,
+      adminStatus: AccountStatus.INACTIVE,
+      userStatus: AccountStatus.INACTIVE,
       isAdmin: false,
-      isSubAdmin: true,
+      isSaler: true,
       isUser: false,
+      salerStatus: AccountStatus.ACTIVE,
     });
 
     return {
-      message: "Create subadmin successfully",
+      message: "Create saler successfully",
     };
   }
 
-  async blockSubaAdminOrUser(data: BlockAccountDto) {
+  async blockSalerOrUser(data: BlockAccountDto) {
     const { type, id } = data;
 
     const account = await this.findOneOrThrow({ where: { id } }).catch(() => {
       throw new NotFoundException("Account not found");
     });
 
-    if (type === "sub-admin" && account.isSubAdmin) {
+    if (type === "saler" && account.isSaler) {
       await this.update({
         where: {
           id,
         },
         data: {
-          adminStatus: AccountStatus.BLOCK,
+          salerStatus: AccountStatus.BLOCK,
         },
       });
     } else if (type === "user" && account.isUser) {
@@ -76,20 +77,20 @@ export class UserSerivce {
     };
   }
 
-  async unBlockSubaAdminOrUser(data: BlockAccountDto) {
+  async unBlockSalerOrUser(data: BlockAccountDto) {
     const { type, id } = data;
 
     const account = await this.findOneOrThrow({ where: { id } }).catch(() => {
       throw new NotFoundException("Account not found");
     });
 
-    if (type === "sub-admin" && account.isSubAdmin) {
+    if (type === "saler" && account.isSaler) {
       await this.update({
         where: {
           id,
         },
         data: {
-          adminStatus: AccountStatus.ACTIVE,
+          salerStatus: AccountStatus.ACTIVE,
         },
       });
     } else if (type === "user" && account.isUser) {

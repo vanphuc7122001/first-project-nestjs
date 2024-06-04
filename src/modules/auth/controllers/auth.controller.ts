@@ -58,7 +58,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post("login")
   async login(@Req() req: Request) {
-    return this._authService.login(req.user as JwtAccessPayload);
+    return this._authService.userLogin(req.user as JwtAccessPayload);
   }
 
   @Post("refresh-token")

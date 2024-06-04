@@ -15,8 +15,8 @@ import { JoiValidationPipe } from "@common/pipes";
 import { BaseQueryParamsValidator } from "@common/validators";
 import { ResponseService } from "@shared/response/response.service";
 import { Request } from "express";
-import { AdminJwtAccessAuthGuard } from "@modules/auth/guards/admin-jwt-access-auth.guard";
-import { CreateSubadminDto } from "../dtos";
+import { AdminJwtAccessAuthGuard } from "@modules/auth/guards";
+import { CreateSalerDto } from "../dtos";
 import {
   CreateSubadminValidator,
   UnBlockAccountValidator,
@@ -46,29 +46,30 @@ export class UserController {
     });
   }
 
-  @Post("create-subadmin")
+  // TODO Edit subadmin => saler
+  @Post("create-saler")
   @UseGuards(AdminJwtAccessAuthGuard)
   createSubadmin(
     @Body(new JoiValidationPipe(CreateSubadminValidator))
-    data: CreateSubadminDto
+    data: CreateSalerDto
   ) {
-    return this._userService.createSubadmin(data);
+    return this._userService.createSaler(data);
   }
 
   @Post("block")
   @UseGuards(AdminJwtAccessAuthGuard)
-  blockSubAdminOrUser(
+  blockSalerOrUser(
     @Body(new JoiValidationPipe(BlockAccountValidator)) data: BlockAccountDto
   ) {
-    return this._userService.blockSubaAdminOrUser(data);
+    return this._userService.blockSalerOrUser(data);
   }
 
   @Post("unblock")
   @UseGuards(AdminJwtAccessAuthGuard)
-  unBlockSubAdminOrUser(
+  unBlockSalerOrUser(
     @Body(new JoiValidationPipe(UnBlockAccountValidator)) data: BlockAccountDto
   ) {
-    return this._userService.unBlockSubaAdminOrUser(data);
+    return this._userService.unBlockSalerOrUser(data);
   }
 
   @Delete(":id")

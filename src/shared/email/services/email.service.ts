@@ -23,11 +23,28 @@ export class EmailService {
     });
   }
 
-  private readTemplate(fileName: string) {
-    return fs.readFileSync(
-      path.resolve("src", "shared", "email", "templates", fileName),
-      "utf-8"
-    );
+  private readTemplate({
+    fileName,
+    title,
+    content,
+    titleLink,
+    link,
+  }: {
+    fileName: string;
+    title: string;
+    content: string;
+    titleLink: string;
+    link: string;
+  }) {
+    return fs
+      .readFileSync(
+        path.resolve("src", "shared", "email", "templates", fileName),
+        "utf-8"
+      )
+      .replace("{{title}}", title)
+      .replace("{{content}}", content)
+      .replace("{{titleLink}}", titleLink)
+      .replace("{{link}}", link);
   }
 
   async sendForgotPasswordEmail({
@@ -39,23 +56,20 @@ export class EmailService {
     subject: string;
     forgotPasswordToken: string;
   }): Promise<void> {
-    const fileHtml = this.readTemplate("forgot-password.html");
+    const fileHtml = this.readTemplate({
+      fileName: "forgot-password.html",
+      title:
+        "You are receiving this email because you requested to reset your password",
+      content: "Click the button below to reset your password",
+      titleLink: "Reset password",
+      link: `http://localhost:4000/forgot-password?token=${forgotPasswordToken}`,
+    });
 
     const mailOptions = {
       from: this.configService.get<string>(CONFIG_VAR.SMTP_EMAIL),
       to: toAddress,
       subject,
-      html: fileHtml
-        .replace(
-          "{{title}}",
-          "You are receiving this email because you requested to reset your password"
-        )
-        .replace("{{content}}", "Click the button below to reset your password")
-        .replace("{{titleLink}}", "Reset password")
-        .replace(
-          "{{link}}",
-          `http://localhost:4000/forgot-password?token=${forgotPasswordToken}`
-        ),
+      html: fileHtml,
     };
 
     try {

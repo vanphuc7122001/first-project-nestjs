@@ -1,4 +1,4 @@
-export class CreateSubadminDto {
+export class CreateSalerDto {
   email: string;
   password: string;
   firstName?: string;

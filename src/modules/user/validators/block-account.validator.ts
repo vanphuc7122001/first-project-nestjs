@@ -4,7 +4,7 @@ import { BaseValidator } from "@common/validators";
 
 export const BaseTypeSchema = Joi.object().pattern(
   Joi.string().trim(),
-  Joi.string().trim().valid("sub-admin", "user").default("user")
+  Joi.string().trim().valid("saler", "user").default("user")
 );
 
 export const BlockAccountValidator = BaseValidator.keys({

@@ -1,4 +1,4 @@
-import { AdminJwtAccessAuthGuard } from "./../guards/admin-jwt-access-auth.guard";
+import { AdminJwtAccessAuthGuard } from "./../guards";
 import { JoiValidationPipe } from "@common/pipes";
 import { Body, Controller, Post, Req, UseGuards } from "@nestjs/common";
 import {

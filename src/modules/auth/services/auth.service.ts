@@ -31,8 +31,8 @@ import { JwtPayload, SignOptions, decode, sign, verify } from "jsonwebtoken";
 import { AccountStatus } from "../enums";
 import { CONFIG_VAR } from "@config/index";
 import { ConfigService } from "@nestjs/config";
-import { EmailService } from "@shared/email/services";
 import { HttpSuccessResponse } from "@common/responses";
+import { SendMailQueue } from "@shared/email/services";
 import { UserSerivce } from "@modules/user/services";
 
 export type TokenType =
@@ -65,7 +65,7 @@ export class AuthService {
   constructor(
     private readonly _configService: ConfigService,
     private readonly _userService: UserSerivce,
-    private readonly _emailService: EmailService
+    private readonly _sendMailQueue: SendMailQueue
   ) {
     this._jwtKeys = {
       [ACCESS_TOKEN]: this._configService.get(
@@ -126,11 +126,13 @@ export class AuthService {
       email,
       firstName,
       lastName,
-      adminStatus: AccountStatus.BLOCK,
+      adminStatus: AccountStatus.INACTIVE,
       userStatus: AccountStatus.ACTIVE,
       isAdmin: false,
       isUser: true,
+      isSaler: false,
       password: await this._hashPassword(password),
+      salerStatus: AccountStatus.INACTIVE,
     });
 
     const excludeField = ["password", "createdAt", "updatedAt", "deletedAt"];
@@ -147,10 +149,28 @@ export class AuthService {
   /**
    * Login user with email and password
    */
-  async login(data: JwtAccessPayload) {
+  async userLogin(data: JwtAccessPayload) {
     const excludeField = ["password", "createdAt", "updatedAt", "deletedAt"];
 
     if (!data.isUser || data.userStatus !== AccountStatus.ACTIVE) {
+      throw new ForbiddenException(
+        "Account is blocked or you are not access to resource"
+      );
+    }
+
+    Object.keys(data).forEach(
+      (key) => excludeField.includes(key) && delete data[key]
+    );
+
+    const result = await this.generateTokensForUser(data);
+
+    return new HttpSuccessResponse(result);
+  }
+
+  async salerLogin(data: JwtAccessPayload) {
+    const excludeField = ["password", "createdAt", "updatedAt", "deletedAt"];
+
+    if (!data.isSaler || data.salerStatus !== AccountStatus.ACTIVE) {
       throw new ForbiddenException(
         "Account is blocked or you are not access to resource"
       );
@@ -194,6 +214,8 @@ export class AuthService {
       lastName: foundUser.lastName,
       adminStatus: foundUser.adminStatus,
       userStatus: foundUser.userStatus,
+      isSaler: foundUser.isSaler,
+      salerStatus: foundUser.salerStatus,
     };
 
     return new HttpSuccessResponse({
@@ -233,10 +255,50 @@ export class AuthService {
       lastName: foundUser.lastName,
       adminStatus: foundUser.adminStatus,
       userStatus: foundUser.userStatus,
+      isSaler: foundUser.isSaler,
+      salerStatus: foundUser.salerStatus,
     };
 
     return {
       accessToken: this._signPayload(payload, ADMIN_ACCESS_TOKEN),
+    };
+  }
+
+  async salerRefreshToken(data: RefreshTokenDto) {
+    const verifyToken = await this._verifyToken(data.refresh, REFRESH_TOKEN);
+
+    const foundUser = await this._userService
+      .findOneOrThrow({
+        where: {
+          id: (verifyToken as JwtPayload).id,
+          deletedAt: null,
+        },
+      })
+      .catch(() => {
+        throw new UnauthorizedException("Suspected refresh token leak");
+      });
+
+    if (!foundUser.isSaler || foundUser.salerStatus !== AccountStatus.ACTIVE) {
+      throw new ForbiddenException(
+        "You do not have permission to access this resource"
+      );
+    }
+
+    const payload: JwtAccessPayload = {
+      id: foundUser.id,
+      email: foundUser.email,
+      firstName: foundUser.firstName,
+      isAdmin: foundUser.isAdmin,
+      isUser: foundUser.isUser,
+      lastName: foundUser.lastName,
+      adminStatus: foundUser.adminStatus,
+      userStatus: foundUser.userStatus,
+      isSaler: foundUser.isSaler,
+      salerStatus: foundUser.salerStatus,
+    };
+
+    return {
+      accessToken: this._signPayload(payload, ACCESS_TOKEN),
     };
   }
 
@@ -309,7 +371,7 @@ export class AuthService {
           id: found.id,
         },
       }),
-      this._emailService.sendForgotPasswordEmail({
+      this._sendMailQueue.sendMailForgotPassword({
         forgotPasswordToken: token,
         toAddress: email,
         subject: "Forgot password",
@@ -455,6 +517,17 @@ export class AuthService {
     const { email, isUser, userStatus } = payload;
 
     if (!isUser || userStatus !== AccountStatus.ACTIVE)
+      throw new ForbiddenException(
+        "You lack the authorization to access this resource."
+      );
+
+    return await this._userService.findUserByEmail(email);
+  }
+
+  async validatePermissionSaler(payload: JwtAccessPayload) {
+    const { email, isSaler, salerStatus } = payload;
+
+    if (!isSaler || salerStatus !== AccountStatus.ACTIVE)
       throw new ForbiddenException(
         "You lack the authorization to access this resource."
       );
