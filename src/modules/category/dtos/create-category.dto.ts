@@ -1,8 +1,14 @@
-class subCategories {
+export class subCategories {
   name: string;
 }
 
+// export class CreateCategoryDto {
+//   name: string;
+//   subCategories?: subCategories[];
+// }
+
 export class CreateCategoryDto {
   name: string;
-  subCategories?: subCategories[];
+  //
+  parentId?: string;
 }

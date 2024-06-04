@@ -15,8 +15,23 @@ export class CategoryRepository {
     return this._model.create({ data });
   }
 
-  async findOne(params: Prisma.CategoryFindFirstArgs) {
-    return this._model.findFirst(params);
+  async createMany(data: Prisma.CategoryCreateManyInput) {
+    return this._model.createMany({ data });
+  }
+
+  async findOne(
+    where: Prisma.CategoryWhereInput,
+    include: Prisma.CategoryInclude | null
+  ) {
+    return this._model.findFirst({ where, include });
+  }
+
+  async findCategoryByName(name: string) {
+    return this._model.findFirst({
+      where: {
+        name,
+      },
+    });
   }
 
   async findOneOrThrow(params: Prisma.CategoryFindFirstOrThrowArgs) {
