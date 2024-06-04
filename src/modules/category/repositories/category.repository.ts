@@ -38,6 +38,16 @@ export class CategoryRepository {
     return this._model.findFirstOrThrow(params);
   }
 
+  async findOneOrThrowWithInclude(
+    where: Prisma.CategoryWhereInput,
+    include: Prisma.CategoryInclude | null
+  ) {
+    return this._model.findFirstOrThrow({
+      where,
+      include,
+    });
+  }
+
   async findMany(params: Prisma.CategoryFindManyArgs) {
     return this._model.findMany(params);
   }

@@ -108,19 +108,24 @@ export class CategoryService {
 
   async deleteCategory(id: string) {
     const foundCategory = await this._categoryRepository
-      .findOneOrThrow({
-        where: {
-          id,
-        },
-        include: {
-          products: true,
-          children: true,
-        },
-      })
+      .findOneOrThrowWithInclude({ id }, { children: true, products: true })
       .catch(() => {
         throw new NotFoundException("Category not found");
       });
 
-    // if(foundCategory.)
+    if (
+      foundCategory.children.length > 0 ||
+      foundCategory.products.length > 0
+    ) {
+      throw new BadRequestException(
+        "Can't remove category because having conditions is not allowed"
+      );
+    }
+
+    await this._categoryRepository.delete({ id });
+
+    return {
+      message: "Category deleted successfully",
+    };
   }
 }
