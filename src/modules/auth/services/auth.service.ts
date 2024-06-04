@@ -28,6 +28,8 @@ import {
 } from "../dtos";
 import { JwtPayload, SignOptions, decode, sign, verify } from "jsonwebtoken";
 
+import { AUTH_ERRORS } from "src/content/errors";
+import { AUTH_SUCCESS } from "src/content/succeses";
 import { AccountStatus } from "../enums";
 import { CONFIG_VAR } from "@config/index";
 import { ConfigService } from "@nestjs/config";
@@ -119,7 +121,7 @@ export class AuthService {
     const foundUser = await this._userService.findUserByEmail(email);
 
     if (foundUser) {
-      throw new ConflictException("Email already exists");
+      throw new ConflictException(AUTH_ERRORS.AUTH_01.message);
     }
 
     const user = await this._userService.create({
@@ -153,9 +155,7 @@ export class AuthService {
     const excludeField = ["password", "createdAt", "updatedAt", "deletedAt"];
 
     if (!data.isUser || data.userStatus !== AccountStatus.ACTIVE) {
-      throw new ForbiddenException(
-        "Account is blocked or you are not access to resource"
-      );
+      throw new ForbiddenException(AUTH_ERRORS.AUTH_02.message);
     }
 
     Object.keys(data).forEach(
@@ -171,9 +171,7 @@ export class AuthService {
     const excludeField = ["password", "createdAt", "updatedAt", "deletedAt"];
 
     if (!data.isSaler || data.salerStatus !== AccountStatus.ACTIVE) {
-      throw new ForbiddenException(
-        "Account is blocked or you are not access to resource"
-      );
+      throw new ForbiddenException(AUTH_ERRORS.AUTH_02.message);
     }
 
     Object.keys(data).forEach(
@@ -196,13 +194,11 @@ export class AuthService {
         },
       })
       .catch(() => {
-        throw new UnauthorizedException("Suspected refresh token leak");
+        throw new UnauthorizedException(AUTH_ERRORS.AUTH_03.message);
       });
 
     if (!foundUser.isUser || foundUser.userStatus !== AccountStatus.ACTIVE) {
-      throw new ForbiddenException(
-        "You do not have permission to access this resource"
-      );
+      throw new ForbiddenException(AUTH_ERRORS.AUTH_04.message);
     }
 
     const payload: JwtAccessPayload = {
@@ -237,13 +233,11 @@ export class AuthService {
         },
       })
       .catch(() => {
-        throw new UnauthorizedException("Suspected refresh token leak");
+        throw new UnauthorizedException(AUTH_ERRORS.AUTH_03.message);
       });
 
     if (!foundUser.isAdmin || foundUser.adminStatus !== AccountStatus.ACTIVE) {
-      throw new ForbiddenException(
-        "You do not have permission to access this resource"
-      );
+      throw new ForbiddenException(AUTH_ERRORS.AUTH_04.message);
     }
 
     const payload: JwtAccessPayload = {
@@ -275,13 +269,11 @@ export class AuthService {
         },
       })
       .catch(() => {
-        throw new UnauthorizedException("Suspected refresh token leak");
+        throw new UnauthorizedException(AUTH_ERRORS.AUTH_03.message);
       });
 
     if (!foundUser.isSaler || foundUser.salerStatus !== AccountStatus.ACTIVE) {
-      throw new ForbiddenException(
-        "You do not have permission to access this resource"
-      );
+      throw new ForbiddenException(AUTH_ERRORS.AUTH_04.message);
     }
 
     const payload: JwtAccessPayload = {
@@ -323,15 +315,11 @@ export class AuthService {
     );
 
     if (isNewPasswordMatchOldPassword) {
-      throw new BadRequestException(
-        "The new password must not match the old password."
-      );
+      throw new BadRequestException(AUTH_ERRORS.AUTH_05.message);
     }
 
     if (!isOldPasswordMatchOldPasswordInDB) {
-      throw new BadRequestException(
-        "The old password must match the old password in db."
-      );
+      throw new BadRequestException(AUTH_ERRORS.AUTH_06.message);
     }
 
     await this._userService.update({
@@ -344,7 +332,7 @@ export class AuthService {
     });
 
     return {
-      message: "Password updated successfully",
+      message: AUTH_SUCCESS.PASSWORD_UPDATE_SUCCESS,
     };
   }
 
@@ -357,7 +345,7 @@ export class AuthService {
         },
       })
       .catch(() => {
-        throw new NotFoundException("Email does not exist");
+        throw new NotFoundException(AUTH_ERRORS.AUTH_07.message);
       });
 
     // sign for got password token
@@ -379,7 +367,7 @@ export class AuthService {
     ]);
 
     return {
-      message: "Check mail to reset password",
+      message: AUTH_SUCCESS.CHECK_MAIL_FORGOT_PASS,
     };
   }
 
@@ -398,7 +386,7 @@ export class AuthService {
         },
       })
       .catch(() => {
-        throw new NotFoundException("Token not found");
+        throw new NotFoundException(AUTH_ERRORS.AUTH_08.message);
       });
 
     const isCurrentPasswordMatchOldPassword = await this._comparePasswords(
@@ -407,9 +395,7 @@ export class AuthService {
     );
 
     if (isCurrentPasswordMatchOldPassword) {
-      throw new BadRequestException(
-        "The new password must not match the old password."
-      );
+      throw new BadRequestException(AUTH_ERRORS.AUTH_05.message);
     }
 
     await this._userService.update({
@@ -423,7 +409,7 @@ export class AuthService {
     });
 
     return {
-      message: "Reset password successfully",
+      message: AUTH_SUCCESS.RESET_PASS,
     };
   }
 
@@ -436,20 +422,18 @@ export class AuthService {
         },
       })
       .catch(() => {
-        throw new NotFoundException("The email does not exist.");
+        throw new NotFoundException(AUTH_ERRORS.AUTH_07.message);
       });
 
     return {
-      message: "The email exists",
+      message: AUTH_SUCCESS.EMAIL_EXIST,
     };
   }
 
   async adminLogin(data: JwtAccessPayload) {
     const excludeField = ["password", "createdAt", "updatedAt", "deletedAt"];
     if (!data.isAdmin || data.adminStatus !== AccountStatus.ACTIVE) {
-      throw new ForbiddenException(
-        "Account is blocked or you are not access to resource"
-      );
+      throw new ForbiddenException(AUTH_ERRORS.AUTH_02.message);
     }
 
     Object.keys(data).forEach(
@@ -476,7 +460,7 @@ export class AuthService {
           },
         })
         .catch(() => {
-          throw new NotFoundException("User not found!");
+          throw new NotFoundException(AUTH_ERRORS.AUTH_09.message);
         })
     );
   }
@@ -487,7 +471,7 @@ export class AuthService {
     const user = await this._userService.findUserByEmail(email);
 
     if (!user || !user.password) {
-      throw new UnauthorizedException("Invalid credentials");
+      throw new UnauthorizedException(AUTH_ERRORS.AUTH_10.message);
     }
 
     const isPasswordValid = await this._comparePasswords(
@@ -496,7 +480,7 @@ export class AuthService {
     );
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException("Incorrect email or password");
+      throw new UnauthorizedException(AUTH_ERRORS.AUTH_11.message);
     }
 
     return user;
@@ -506,9 +490,7 @@ export class AuthService {
     const { email, isAdmin, adminStatus } = payload;
 
     if (!isAdmin || adminStatus !== AccountStatus.ACTIVE)
-      throw new ForbiddenException(
-        "You lack the authorization to access this resource."
-      );
+      throw new ForbiddenException(AUTH_ERRORS.AUTH_12.message);
 
     return await this._userService.findUserByEmail(email);
   }
@@ -517,9 +499,7 @@ export class AuthService {
     const { email, isUser, userStatus } = payload;
 
     if (!isUser || userStatus !== AccountStatus.ACTIVE)
-      throw new ForbiddenException(
-        "You lack the authorization to access this resource."
-      );
+      throw new ForbiddenException(AUTH_ERRORS.AUTH_12.message);
 
     return await this._userService.findUserByEmail(email);
   }
@@ -528,9 +508,7 @@ export class AuthService {
     const { email, isSaler, salerStatus } = payload;
 
     if (!isSaler || salerStatus !== AccountStatus.ACTIVE)
-      throw new ForbiddenException(
-        "You lack the authorization to access this resource."
-      );
+      throw new ForbiddenException(AUTH_ERRORS.AUTH_12.message);
 
     return await this._userService.findUserByEmail(email);
   }

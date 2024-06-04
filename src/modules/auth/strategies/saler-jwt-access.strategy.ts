@@ -30,7 +30,7 @@ export class SalerJwtAccessStrategy extends PassportStrategy(
     const saler = await this._authService.validatePermissionSaler(payload);
 
     if (saler.deletedAt || saler.userStatus === AccountStatus.BLOCK) {
-      throw new UnauthorizedException("Unauthorized");
+      throw new UnauthorizedException();
     }
 
     return saler;

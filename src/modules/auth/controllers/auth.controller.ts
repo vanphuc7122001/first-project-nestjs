@@ -117,7 +117,6 @@ export class AuthController {
   @Get("profile")
   @UseGuards()
   async getOwnProfile(@RequestUser() user: JwtAccessPayload) {
-    // throw new BadRequestException(AUTH_ERRORS.AUTH_01);
     const { id } = user;
     return await this._authService.getOwnProfile(id);
   }

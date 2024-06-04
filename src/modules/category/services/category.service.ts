@@ -7,6 +7,8 @@ import {
 import { CreateCategoryDto, UpdateCategoryDto } from "../dtos";
 
 import { BaseQueryParams } from "@common/dtos";
+import { CATEGORY_ERRORS } from "src/content/errors";
+import { CATEGORY_SUCCESS } from "src/content/succeses";
 import { CategoryRepository } from "../repositories";
 
 @Injectable()
@@ -24,7 +26,7 @@ export class CategoryService {
         await this._categoryRepository.create({ name, level: 0 });
       }
 
-      throw new ConflictException("Category name already exists");
+      throw new ConflictException(CATEGORY_ERRORS.CATEGORY_01.message);
     }
 
     const foundParent = await this._categoryRepository
@@ -34,11 +36,11 @@ export class CategoryService {
         },
       })
       .catch(() => {
-        throw new NotFoundException("Could not find category parent");
+        throw new NotFoundException(CATEGORY_ERRORS.CATEGORY_02.message);
       });
 
     if (foundParent.level === 2) {
-      throw new BadRequestException("Subcategory level cannot greather than 3");
+      throw new BadRequestException(CATEGORY_ERRORS.CATEGORY_03.message);
     }
 
     await this._categoryRepository.create({
@@ -52,7 +54,7 @@ export class CategoryService {
     });
 
     return {
-      message: "Create category successfully",
+      message: CATEGORY_SUCCESS.CREATE_CATEGORY,
     };
   }
 
@@ -91,7 +93,7 @@ export class CategoryService {
           },
         })
         .catch(() => {
-          throw new NotFoundException("Category not found");
+          throw new NotFoundException(CATEGORY_ERRORS.CATEGORY_04.message);
         }),
       this._categoryRepository.update({
         where: {
@@ -102,7 +104,7 @@ export class CategoryService {
     ]);
 
     return {
-      message: "Update message successfully",
+      message: CATEGORY_SUCCESS.UPDATE_CATEGORY,
     };
   }
 
@@ -110,22 +112,20 @@ export class CategoryService {
     const foundCategory = await this._categoryRepository
       .findOneOrThrowWithInclude({ id }, { children: true, products: true })
       .catch(() => {
-        throw new NotFoundException("Category not found");
+        throw new NotFoundException(CATEGORY_ERRORS.CATEGORY_04.message);
       });
 
     if (
       foundCategory.children.length > 0 ||
       foundCategory.products.length > 0
     ) {
-      throw new BadRequestException(
-        "Can't remove category because having conditions is not allowed"
-      );
+      throw new BadRequestException(CATEGORY_ERRORS.CATEGORY_05.message);
     }
 
     await this._categoryRepository.delete({ id });
 
     return {
-      message: "Category deleted successfully",
+      message: CATEGORY_SUCCESS.DELETE_CATEGORY,
     };
   }
 }

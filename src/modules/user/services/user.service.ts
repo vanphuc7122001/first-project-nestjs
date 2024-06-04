@@ -11,6 +11,8 @@ import { BaseQueryParams } from "@common/dtos";
 import { BlockAccountDto } from "../dtos";
 import { CreateSalerDto } from "../dtos";
 import { Prisma } from "@prisma/client";
+import { USER_ERRORS } from "src/content/errors";
+import { USER_SUCCESS } from "src/content/succeses";
 import { UserRepository } from "../repositories";
 
 @Injectable()
@@ -22,7 +24,7 @@ export class UserSerivce {
     const foundUser = await this.findUserByEmail(email);
 
     if (foundUser) {
-      throw new ConflictException("The email is already exists");
+      throw new ConflictException(USER_ERRORS.USER_02.message);
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -41,7 +43,7 @@ export class UserSerivce {
     });
 
     return {
-      message: "Create saler successfully",
+      message: USER_SUCCESS.CREATE_SALER,
     };
   }
 
@@ -49,7 +51,7 @@ export class UserSerivce {
     const { type, id } = data;
 
     const account = await this.findOneOrThrow({ where: { id } }).catch(() => {
-      throw new NotFoundException("Account not found");
+      throw new NotFoundException(USER_ERRORS.USER_01.message);
     });
 
     if (type === "saler" && account.isSaler) {
@@ -73,7 +75,7 @@ export class UserSerivce {
     }
 
     return {
-      message: "Block account successfully",
+      message: USER_SUCCESS.BLOCK_ACCOUNT,
     };
   }
 
@@ -81,7 +83,7 @@ export class UserSerivce {
     const { type, id } = data;
 
     const account = await this.findOneOrThrow({ where: { id } }).catch(() => {
-      throw new NotFoundException("Account not found");
+      throw new NotFoundException(USER_ERRORS.USER_01.message);
     });
 
     if (type === "saler" && account.isSaler) {
@@ -105,7 +107,7 @@ export class UserSerivce {
     }
 
     return {
-      message: "UnBlock account successfully",
+      message: USER_SUCCESS.UNBLOCK_ACCOUNT,
     };
   }
 
@@ -116,7 +118,7 @@ export class UserSerivce {
           id,
         },
       }).catch(() => {
-        throw new NotFoundException("User not found");
+        throw new NotFoundException(USER_ERRORS.USER_01.message);
       }),
       this.update({
         where: {
@@ -129,7 +131,7 @@ export class UserSerivce {
     ]);
 
     return {
-      message: "Deleted successfully!",
+      message: USER_SUCCESS.DELETE_USER,
     };
   }
 

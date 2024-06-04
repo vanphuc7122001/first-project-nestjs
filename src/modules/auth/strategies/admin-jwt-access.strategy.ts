@@ -30,7 +30,7 @@ export class AdminJwtAccessStrategy extends PassportStrategy(
     const admin = await this._authService.validatePermissionAdmin(payload);
 
     if (admin.deletedAt || admin.userStatus === AccountStatus.BLOCK) {
-      throw new UnauthorizedException("Unauthorized");
+      throw new UnauthorizedException();
     }
 
     return admin;
