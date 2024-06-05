@@ -7,14 +7,25 @@ import {
   Param,
   Patch,
   Post,
+  Query,
+  Req,
+  UseGuards,
 } from "@nestjs/common";
-import { CreateProductValidator } from "../validators";
+import { CreateProductValidator, UpdateProductValidator } from "../validators";
 import { ProductService } from "../services";
 import { CreateProductDto } from "../dtos/create-product.dto";
+import { AdminJwtAccessAuthGuard } from "@modules/auth/guards";
+import { BaseQueryParamsValidator } from "@common/validators";
+import { BaseQueryParams } from "@common/dtos";
+import { Request } from "express";
+import { ResponseService } from "@shared/response/response.service";
+import { UpdateProductDto } from "../dtos/update-product.dto.";
 
 @Controller("products")
 export class ProductController {
   constructor(private readonly _productService: ProductService) {}
+
+  @UseGuards(AdminJwtAccessAuthGuard)
   @Post()
   async createProduct(
     @Body(new JoiValidationPipe(CreateProductValidator)) data: CreateProductDto
@@ -23,8 +34,24 @@ export class ProductController {
   }
 
   @Get(":id")
-  getProduct(@Param("id") id: string) {
-    return "get product detail";
+  async getProduct(@Param("id") id: string) {
+    return await this._productService.getProduct(id);
+  }
+
+  @Get("")
+  async getProducts(
+    @Query(new JoiValidationPipe(BaseQueryParamsValidator))
+    query: BaseQueryParams,
+    @Req() req: Request
+  ) {
+    const { count, data } = await this._productService.getProducts(query);
+
+    return ResponseService.paginateResponse({
+      count,
+      data,
+      query,
+      req,
+    });
   }
 
   @Get("publishes")
@@ -38,8 +65,11 @@ export class ProductController {
   }
 
   @Patch(":id")
-  updateInfoProduct(@Param("id") id: string) {
-    return "update product";
+  updateInfoProduct(
+    @Param("id") id: string,
+    @Body(new JoiValidationPipe(UpdateProductValidator)) data: UpdateProductDto
+  ) {
+    return this._productService.updateInfoProduct(id, data);
   }
 
   @Patch("publish/:id")

@@ -21,7 +21,7 @@ export class CategoryRepository {
 
   async findOne(
     where: Prisma.CategoryWhereInput,
-    include?: Prisma.CategoryInclude | null
+    include?: Prisma.CategoryInclude
   ) {
     return this._model.findFirst({ where, include });
   }

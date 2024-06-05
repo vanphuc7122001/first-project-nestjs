@@ -11,4 +11,8 @@ export const PRODUCT_ERRORS = {
     code: "PRODUCT_03",
     message: "Category id in product must be unique.",
   },
+  PRODUCT_04: {
+    code: "PRODUCT_04",
+    message: "Can not add category to product when category !== level 2",
+  },
 };
