@@ -23,9 +23,7 @@ export class UserSerivce {
     const { email, password, firstName, lastName } = data;
     const foundUser = await this.findUserByEmail(email);
 
-    if (foundUser) {
-      throw new ConflictException(USER_ERRORS.USER_02.message);
-    }
+    if (foundUser) throw new ConflictException(USER_ERRORS.USER_02.message);
 
     const salt = await bcrypt.genSalt(10);
 

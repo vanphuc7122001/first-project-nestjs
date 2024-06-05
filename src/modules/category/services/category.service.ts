@@ -24,9 +24,8 @@ export class CategoryService {
         name
       );
 
-      if (!foundCategory) {
+      if (!foundCategory)
         await this._categoryRepository.create({ name, level: 0 });
-      }
 
       throw new ConflictException(CATEGORY_ERRORS.CATEGORY_01.message);
     }
@@ -41,9 +40,8 @@ export class CategoryService {
         throw new NotFoundException(CATEGORY_ERRORS.CATEGORY_02.message);
       });
 
-    if (foundParent.level === 2) {
+    if (foundParent.level === 2)
       throw new BadRequestException(CATEGORY_ERRORS.CATEGORY_03.message);
-    }
 
     await this._categoryRepository.create({
       name,
@@ -109,12 +107,8 @@ export class CategoryService {
         throw new NotFoundException(CATEGORY_ERRORS.CATEGORY_04.message);
       });
 
-    if (
-      foundCategory.children.length > 0 ||
-      foundCategory.products.length > 0
-    ) {
+    if (foundCategory.children.length > 0 || foundCategory.products.length > 0)
       throw new BadRequestException(CATEGORY_ERRORS.CATEGORY_05.message);
-    }
 
     await this._categoryRepository.delete({ id });
 
@@ -141,11 +135,9 @@ export class CategoryService {
     const seen = new Set<string>();
 
     for (const item of arr) {
-      if (seen.has(item)) {
-        duplicates.push(item);
-      } else {
-        seen.add(item);
-      }
+      if (seen.has(item)) duplicates.push(item);
+
+      seen.add(item);
     }
 
     return duplicates;

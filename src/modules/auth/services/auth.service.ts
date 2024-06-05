@@ -120,9 +120,7 @@ export class AuthService {
 
     const foundUser = await this._userService.findUserByEmail(email);
 
-    if (foundUser) {
-      throw new ConflictException(AUTH_ERRORS.AUTH_01.message);
-    }
+    if (foundUser) throw new ConflictException(AUTH_ERRORS.AUTH_01.message);
 
     const user = await this._userService.create({
       email,
@@ -154,9 +152,8 @@ export class AuthService {
   async userLogin(data: JwtAccessPayload) {
     const excludeField = ["password", "createdAt", "updatedAt", "deletedAt"];
 
-    if (!data.isUser || data.userStatus !== AccountStatus.ACTIVE) {
+    if (!data.isUser || data.userStatus !== AccountStatus.ACTIVE)
       throw new ForbiddenException(AUTH_ERRORS.AUTH_02.message);
-    }
 
     Object.keys(data).forEach(
       (key) => excludeField.includes(key) && delete data[key]
@@ -170,9 +167,8 @@ export class AuthService {
   async salerLogin(data: JwtAccessPayload) {
     const excludeField = ["password", "createdAt", "updatedAt", "deletedAt"];
 
-    if (!data.isSaler || data.salerStatus !== AccountStatus.ACTIVE) {
+    if (!data.isSaler || data.salerStatus !== AccountStatus.ACTIVE)
       throw new ForbiddenException(AUTH_ERRORS.AUTH_02.message);
-    }
 
     Object.keys(data).forEach(
       (key) => excludeField.includes(key) && delete data[key]
@@ -197,9 +193,8 @@ export class AuthService {
         throw new UnauthorizedException(AUTH_ERRORS.AUTH_03.message);
       });
 
-    if (!foundUser.isUser || foundUser.userStatus !== AccountStatus.ACTIVE) {
+    if (!foundUser.isUser || foundUser.userStatus !== AccountStatus.ACTIVE)
       throw new ForbiddenException(AUTH_ERRORS.AUTH_04.message);
-    }
 
     const payload: JwtAccessPayload = {
       id: foundUser.id,
@@ -236,9 +231,8 @@ export class AuthService {
         throw new UnauthorizedException(AUTH_ERRORS.AUTH_03.message);
       });
 
-    if (!foundUser.isAdmin || foundUser.adminStatus !== AccountStatus.ACTIVE) {
+    if (!foundUser.isAdmin || foundUser.adminStatus !== AccountStatus.ACTIVE)
       throw new ForbiddenException(AUTH_ERRORS.AUTH_04.message);
-    }
 
     const payload: JwtAccessPayload = {
       id: foundUser.id,
@@ -272,9 +266,8 @@ export class AuthService {
         throw new UnauthorizedException(AUTH_ERRORS.AUTH_03.message);
       });
 
-    if (!foundUser.isSaler || foundUser.salerStatus !== AccountStatus.ACTIVE) {
+    if (!foundUser.isSaler || foundUser.salerStatus !== AccountStatus.ACTIVE)
       throw new ForbiddenException(AUTH_ERRORS.AUTH_04.message);
-    }
 
     const payload: JwtAccessPayload = {
       id: foundUser.id,
@@ -314,13 +307,11 @@ export class AuthService {
       passwordInDb
     );
 
-    if (isNewPasswordMatchOldPassword) {
+    if (isNewPasswordMatchOldPassword)
       throw new BadRequestException(AUTH_ERRORS.AUTH_05.message);
-    }
 
-    if (!isOldPasswordMatchOldPasswordInDB) {
+    if (!isOldPasswordMatchOldPasswordInDB)
       throw new BadRequestException(AUTH_ERRORS.AUTH_06.message);
-    }
 
     await this._userService.update({
       data: {
@@ -394,9 +385,8 @@ export class AuthService {
       foundUser.password
     );
 
-    if (isCurrentPasswordMatchOldPassword) {
+    if (isCurrentPasswordMatchOldPassword)
       throw new BadRequestException(AUTH_ERRORS.AUTH_05.message);
-    }
 
     await this._userService.update({
       where: {
@@ -432,9 +422,8 @@ export class AuthService {
 
   async adminLogin(data: JwtAccessPayload) {
     const excludeField = ["password", "createdAt", "updatedAt", "deletedAt"];
-    if (!data.isAdmin || data.adminStatus !== AccountStatus.ACTIVE) {
+    if (!data.isAdmin || data.adminStatus !== AccountStatus.ACTIVE)
       throw new ForbiddenException(AUTH_ERRORS.AUTH_02.message);
-    }
 
     Object.keys(data).forEach(
       (key) => excludeField.includes(key) && delete data[key]
@@ -470,18 +459,16 @@ export class AuthService {
   async validateUser(email: string, password: string) {
     const user = await this._userService.findUserByEmail(email);
 
-    if (!user || !user.password) {
+    if (!user || !user.password)
       throw new UnauthorizedException(AUTH_ERRORS.AUTH_10.message);
-    }
 
     const isPasswordValid = await this._comparePasswords(
       password,
       user.password
     );
 
-    if (!isPasswordValid) {
+    if (!isPasswordValid)
       throw new UnauthorizedException(AUTH_ERRORS.AUTH_11.message);
-    }
 
     return user;
   }
@@ -562,9 +549,7 @@ export class AuthService {
   private async _verifyToken(token: string, type: string) {
     return new Promise<JwtAccessPayload>((resolve, reject) => {
       verify(token, this._jwtKeys[type], (err, decoded) => {
-        if (err) {
-          throw reject(err);
-        }
+        if (err) throw reject(err);
 
         resolve(decoded as JwtAccessPayload);
       });

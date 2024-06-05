@@ -54,9 +54,10 @@ export class ProductController {
     });
   }
 
+  @UseGuards(AdminJwtAccessAuthGuard)
   @Get("publishes")
-  getProductsPublished() {
-    return "get products";
+  async getProductsPublished(@Param("id") id: string) {
+    return "Get Products Published";
   }
 
   @Get("un-publishes")
@@ -64,6 +65,7 @@ export class ProductController {
     return "get products";
   }
 
+  @UseGuards(AdminJwtAccessAuthGuard)
   @Patch(":id")
   updateInfoProduct(
     @Param("id") id: string,
@@ -72,14 +74,16 @@ export class ProductController {
     return this._productService.updateInfoProduct(id, data);
   }
 
+  @UseGuards(AdminJwtAccessAuthGuard)
   @Patch("publish/:id")
-  publishProduct(@Param("id") id: string) {
-    return "update product";
+  async publishProduct(@Param("id") id: string) {
+    return await this._productService.publishProduct(id);
   }
 
+  @UseGuards(AdminJwtAccessAuthGuard)
   @Patch("un-publish/:id")
-  unPublishProduct(@Param("id") id: string) {
-    return "update product";
+  async unPublishProduct(@Param("id") id: string) {
+    return await this._productService.unPublishProduct(id);
   }
 
   // TODO add table order handle after

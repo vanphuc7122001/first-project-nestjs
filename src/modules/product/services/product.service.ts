@@ -36,9 +36,8 @@ export class ProductService {
           );
 
           // Have check level category === 2?
-          if (foundCategory.level !== 2) {
+          if (foundCategory.level !== 2)
             throw new BadRequestException(PRODUCT_ERRORS.PRODUCT_04.message);
-          }
 
           return foundCategory;
         })
@@ -46,14 +45,12 @@ export class ProductService {
     ]);
 
     // Have check product name already exists in db?
-    if (foundProduct) {
+    if (foundProduct)
       throw new NotFoundException(PRODUCT_ERRORS.PRODUCT_02.message);
-    }
 
     // Have check id of category unique ?
-    if (duplicates.length > 0) {
+    if (duplicates.length > 0)
       throw new BadRequestException(PRODUCT_ERRORS.PRODUCT_03.message);
-    }
 
     await this._productRepository.create({
       name,
@@ -124,9 +121,8 @@ export class ProductService {
             );
 
             // Have check level category === 2?
-            if (foundCategory.level !== 2) {
+            if (foundCategory.level !== 2)
               throw new BadRequestException(PRODUCT_ERRORS.PRODUCT_04.message);
-            }
 
             return foundCategory;
           })
@@ -134,14 +130,12 @@ export class ProductService {
     ]);
 
     // Have check product name already exists in db?
-    if (foundProduct) {
+    if (foundProduct)
       throw new NotFoundException(PRODUCT_ERRORS.PRODUCT_02.message);
-    }
 
     // Have check id of category unique ?
-    if (duplicates.length > 0) {
+    if (duplicates.length > 0)
       throw new BadRequestException(PRODUCT_ERRORS.PRODUCT_03.message);
-    }
 
     await this._productRepository.update({
       where: {
@@ -157,6 +151,36 @@ export class ProductService {
     });
     return {
       message: PRODUCT_SUCCESS.UPDATE_PRODUCT,
+    };
+  }
+
+  async publishProduct(id: string) {
+    await this._productRepository.update({
+      where: {
+        id,
+      },
+      data: {
+        isPublished: true,
+      },
+    });
+
+    return {
+      message: PRODUCT_SUCCESS.PUBLISH_PRODUCT_SUCCESS,
+    };
+  }
+
+  async unPublishProduct(id: string) {
+    await this._productRepository.update({
+      where: {
+        id,
+      },
+      data: {
+        isPublished: true,
+      },
+    });
+
+    return {
+      message: PRODUCT_SUCCESS.UNPUBLISH_PRODUCT_SUCCESS,
     };
   }
 
