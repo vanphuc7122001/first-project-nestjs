@@ -4,11 +4,9 @@ export class CreateProductDto {
   price: number;
   image: string;
   quantity: number;
+  categories: CategoryType[];
 }
 
-// name        String            @db.VarChar(255)
-//   description String?           @db.VarChar(255)
-//   price       Float
-//   image       String            @db.VarChar(255)
-//   categories  ProductCategory[]
-//   quantity    Int
+export class CategoryType {
+  id: string;
+}

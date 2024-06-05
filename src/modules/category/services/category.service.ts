@@ -14,6 +14,8 @@ import { CategoryRepository } from "../repositories";
 @Injectable()
 export class CategoryService {
   constructor(private readonly _categoryRepository: CategoryRepository) {}
+  /** ============================== CRUD ============================== */
+
   async createCategory(data: CreateCategoryDto) {
     const { name, parentId } = data;
 
@@ -86,15 +88,7 @@ export class CategoryService {
 
   async updateCategory(id: string, data: UpdateCategoryDto) {
     await Promise.all([
-      this._categoryRepository
-        .findOneOrThrow({
-          where: {
-            id: id,
-          },
-        })
-        .catch(() => {
-          throw new NotFoundException(CATEGORY_ERRORS.CATEGORY_04.message);
-        }),
+      this.findCategoryById(id),
       this._categoryRepository.update({
         where: {
           id,
@@ -127,5 +121,33 @@ export class CategoryService {
     return {
       message: CATEGORY_SUCCESS.DELETE_CATEGORY,
     };
+  }
+
+  /** ============================== Func general ============================== */
+  async findCategoryById(id: string) {
+    return await this._categoryRepository
+      .findOneOrThrow({
+        where: {
+          id,
+        },
+      })
+      .catch(() => {
+        throw new NotFoundException(CATEGORY_ERRORS.CATEGORY_04.message);
+      });
+  }
+
+  async checkDuplicateCategoryIds(arr: string[]): Promise<string[]> {
+    const duplicates: string[] = [];
+    const seen = new Set<string>();
+
+    for (const item of arr) {
+      if (seen.has(item)) {
+        duplicates.push(item);
+      } else {
+        seen.add(item);
+      }
+    }
+
+    return duplicates;
   }
 }

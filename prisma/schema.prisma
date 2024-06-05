@@ -10,50 +10,43 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 model Category {
-  id       String            @id @default(uuid()) @db.VarChar(36)
-  name     String            @db.VarChar(255)
-  parentId String?           @map("parent_id") @db.VarChar(36)
-  parent   Category?         @relation("CategoryToCategory", fields: [parentId], references: [id])
-  children Category[]        @relation("CategoryToCategory")
-  products ProductCategory[]
+    id       String     @id @default(uuid()) @db.VarChar(36)
+    name     String     @db.VarChar(255)
+    parentId String?    @map("parent_id") @db.VarChar(36)
+    parent   Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
+    children Category[] @relation("CategoryToCategory")
+    products Product[]
 
-  level     Int       @default(0)
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamptz(3)
+    level     Int       @default(0)
+    createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+    updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  @@map("categories")
+    @@map("categories")
 }
 
-model ProductCategory {
-  id         String   @id @default(uuid()) @db.VarChar(36)
-  productId  String   @map("product_id") @db.VarChar(36)
-  categoryId String   @map("category_id") @db.VarChar(36)
-  products   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  categories Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
-  @@unique([productId, categoryId])
-  @@map("product_categories")
-}
 
 model Product {
-  id String @id @default(uuid()) @db.VarChar(36)
+    id String @id @default(uuid()) @db.VarChar(36)
 
-  name        String            @db.VarChar(255)
-  description String?           @db.VarChar(255)
-  price       Float
-  image       String            @db.VarChar(255)
-  categories  ProductCategory[]
-  quantity    Int
+    name        String     @db.VarChar(255)
+    description String?    @db.Text
+    price       Float
+    image       String     @db.VarChar(255)
+    categories  Category[]
 
-  isPublished Boolean @default(false)
+    quantity Int
 
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamptz(3)
-  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
+    isPublished Boolean @default(false)
 
-  @@map("products")
+    createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+    updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamptz(3)
+    deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+    @@map("products")
 }
+
 
 model Seed {
   id        String   @id @default(uuid()) @db.VarChar(36)
@@ -62,6 +55,7 @@ model Seed {
 
   @@map("seeds")
 }
+
 
 model User {
   id                  String    @id @default(uuid()) @db.VarChar(36)

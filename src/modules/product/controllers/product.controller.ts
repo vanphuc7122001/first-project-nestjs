@@ -1,10 +1,25 @@
-import { Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
+import { JoiValidationPipe } from "@common/pipes";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from "@nestjs/common";
+import { CreateProductValidator } from "../validators";
+import { ProductService } from "../services";
+import { CreateProductDto } from "../dtos/create-product.dto";
 
 @Controller("products")
 export class ProductController {
+  constructor(private readonly _productService: ProductService) {}
   @Post()
-  createProduct() {
-    return "create product";
+  async createProduct(
+    @Body(new JoiValidationPipe(CreateProductValidator)) data: CreateProductDto
+  ) {
+    return await this._productService.createProduct(data);
   }
 
   @Get(":id")
@@ -37,6 +52,7 @@ export class ProductController {
     return "update product";
   }
 
+  // TODO add table order handle after
   @Delete(":id")
   removeProduct(@Param("id") id: string) {
     return "Delete product";

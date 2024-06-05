@@ -1,10 +1,11 @@
-import { ObjectSchema } from 'joi';
 import {
   HttpException,
   HttpStatus,
   Injectable,
   PipeTransform,
-} from '@nestjs/common';
+} from "@nestjs/common";
+
+import { ObjectSchema } from "joi";
 
 @Injectable()
 export class JoiValidationPipe implements PipeTransform {
@@ -21,7 +22,7 @@ export class JoiValidationPipe implements PipeTransform {
             ...detail.context,
           })),
         },
-        HttpStatus.UNPROCESSABLE_ENTITY,
+        HttpStatus.UNPROCESSABLE_ENTITY
       );
     }
     return result.value;
