@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -11,7 +12,10 @@ import {
   UseGuards,
 } from "@nestjs/common";
 
-import { AdminJwtAccessAuthGuard } from "@modules/auth/guards";
+import {
+  AdminJwtAccessAuthGuard,
+  SalerJwtAccessAuthGuard,
+} from "@modules/auth/guards";
 import { CreateCategoryDto, UpdateCategoryDto } from "../dtos";
 import { JoiValidationPipe } from "@common/pipes";
 import {
@@ -23,19 +27,26 @@ import { BaseQueryParamsValidator } from "@common/validators";
 import { BaseQueryParams } from "@common/dtos";
 import { ResponseService } from "@shared/response/response.service";
 import { Request } from "express";
+import { HttpStatusCode } from "axios";
 
 @Controller("categories")
 export class CategoryController {
   constructor(private readonly _categoryService: CategoryService) {}
+
+  @HttpCode(HttpStatusCode.Created)
   @Post()
   @UseGuards(AdminJwtAccessAuthGuard)
   async createCategory(
     @Body(new JoiValidationPipe(CreateCategoryValidator))
     data: CreateCategoryDto
   ) {
-    return await this._categoryService.createCategory(data);
+    const result = await this._categoryService.createCategory(data);
+    return {
+      ...result,
+    };
   }
 
+  @HttpCode(HttpStatusCode.Ok)
   @Get()
   @UseGuards(AdminJwtAccessAuthGuard)
   async getCategories(
@@ -53,6 +64,7 @@ export class CategoryController {
     });
   }
 
+  @HttpCode(HttpStatusCode.Ok)
   @Patch(":id")
   @UseGuards(AdminJwtAccessAuthGuard)
   async updateCategory(
@@ -60,11 +72,18 @@ export class CategoryController {
     data: UpdateCategoryDto,
     @Param("id") id: string
   ) {
-    return await this._categoryService.updateCategory(id, data);
+    const result = await this._categoryService.updateCategory(id, data);
+    return {
+      ...result,
+    };
   }
 
+  @HttpCode(HttpStatusCode.NoContent)
   @Delete(":id")
   async deleteCategory(@Param("id") id: string) {
-    return await this._categoryService.deleteCategory(id);
+    const result = await this._categoryService.deleteCategory(id);
+    return {
+      ...result,
+    };
   }
 }

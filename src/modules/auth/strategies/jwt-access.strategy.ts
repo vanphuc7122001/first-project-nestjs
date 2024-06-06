@@ -29,8 +29,9 @@ export class JwtAccessStrategy extends PassportStrategy(
   async validate(payload: JwtAccessPayload) {
     const user = await this._authService.validatePermissionUser(payload);
 
-    if (user.deletedAt || user.userStatus === AccountStatus.BLOCK)
+    if (user.deletedAt || user.userStatus === AccountStatus.BLOCK) {
       throw new UnauthorizedException();
+    }
 
     return user;
   }

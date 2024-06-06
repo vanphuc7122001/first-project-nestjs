@@ -9,7 +9,7 @@ model Product {
 
     quantity Int
 
-    isPublished Boolean @default(false)
+    isPublished Boolean @default(false) @map("is_publish")
 
     createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
     updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamptz(3)

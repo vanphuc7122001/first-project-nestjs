@@ -3,9 +3,5 @@ export class UpdateProductDto {
   description?: string;
   image?: string;
   price?: number;
-  categories?: CategoryType[];
-}
-
-export class CategoryType {
-  id: string;
+  categoryId?: string;
 }

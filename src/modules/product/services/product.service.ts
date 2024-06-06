@@ -1,16 +1,17 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { CATEGORY_ERRORS, PRODUCT_ERRORS } from "src/content/errors";
 
 import { BaseQueryParams } from "@common/dtos";
 import { CategoryService } from "@modules/category/services";
 import { CreateProductDto } from "../dtos/create-product.dto";
-import { PRODUCT_ERRORS } from "src/content/errors";
-import { PRODUCT_SUCCESS } from "src/content/succeses/product.success";
 import { ProductRepository } from "../repositories";
 import { UpdateProductDto } from "../dtos/update-product.dto.";
+import { isObject } from "@common/utils";
 
 @Injectable()
 export class ProductService {
@@ -21,36 +22,44 @@ export class ProductService {
 
   /** ============================== CRUD ============================== */
   async createProduct(data: CreateProductDto) {
-    const { name, categories, ...rest } = data;
+    const { name, categoryId, ...rest } = data;
 
-    const categoryIds = categories.map((item) => item.id);
-
-    const [foundProduct, duplicates, _] = await Promise.all([
+    const [foundProductName, foundCategory] = await Promise.all([
       this._findProductByName(name),
-      this._categoryService.checkDuplicateCategoryIds(categoryIds),
-      await Promise.all(
-        // Have check category in database ?
-        categories.map(async (category) => {
-          const foundCategory = await this._categoryService.findCategoryById(
-            category.id
-          );
-
-          // Have check level category === 2?
-          if (foundCategory.level !== 2)
-            throw new BadRequestException(PRODUCT_ERRORS.PRODUCT_04.message);
-
-          return foundCategory;
-        })
+      this._categoryService.findOne(
+        { id: categoryId },
+        {
+          id: true,
+          parent: {
+            select: {
+              id: true,
+              parent: {
+                select: {
+                  id: true,
+                },
+              },
+            },
+          },
+        }
       ),
     ]);
 
     // Have check product name already exists in db?
-    if (foundProduct)
+    if (foundProductName) {
       throw new NotFoundException(PRODUCT_ERRORS.PRODUCT_02.message);
+    }
 
-    // Have check id of category unique ?
-    if (duplicates.length > 0)
-      throw new BadRequestException(PRODUCT_ERRORS.PRODUCT_03.message);
+    // Have check category exists in db?
+    if (!foundCategory) {
+      throw new NotFoundException(CATEGORY_ERRORS.CATEGORY_04.message);
+    }
+
+    const categoryIds = this._recursiveCategoryIds(foundCategory);
+    // const categoryIds = [
+    //   foundCategory.id,
+    //   foundCategory?.parentId,
+    //   foundCategory?.parent?.parentId,
+    // ].filter((id) => id);
 
     await this._productRepository.create({
       name,
@@ -61,12 +70,24 @@ export class ProductService {
     });
 
     return {
-      message: PRODUCT_SUCCESS.CREATE_PRODUCT,
+      success: true,
     };
   }
 
   async getProduct(id: string) {
-    return await this._findProductById(id);
+    const foundProduct = await this._productRepository.findOne({
+      where: {
+        id,
+      },
+    });
+
+    if (!foundProduct) {
+      throw new NotFoundException(PRODUCT_ERRORS.PRODUCT_01.message);
+    }
+
+    return {
+      ...foundProduct,
+    };
   }
 
   async getProducts(query: BaseQueryParams) {
@@ -103,46 +124,160 @@ export class ProductService {
     };
   }
 
-  async updateInfoProduct(id: string, data: UpdateProductDto) {
-    const { name, categories, ...rest } = data;
+  async getProductsByCategoryById(query: BaseQueryParams, id: string) {
+    const { page = 1, limit = 10, search, sort } = query;
 
-    const categoryIds = categories && categories.map((item) => item.id);
-
-    const [foundProduct, duplicates, _] = await Promise.all([
-      name && this._findProductByName(name),
-      categories &&
-        this._categoryService.checkDuplicateCategoryIds(categoryIds),
-      categories &&
-        (await Promise.all(
-          // Have check category in database ?
-          categories.map(async (category) => {
-            const foundCategory = await this._categoryService.findCategoryById(
-              category.id
-            );
-
-            // Have check level category === 2?
-            if (foundCategory.level !== 2)
-              throw new BadRequestException(PRODUCT_ERRORS.PRODUCT_04.message);
-
-            return foundCategory;
-          })
-        )),
+    const [count, data] = await Promise.all([
+      this._productRepository.count({
+        where: {
+          categories: {
+            some: {
+              id,
+            },
+          },
+          name: {
+            contains: search,
+          },
+        },
+      }),
+      this._productRepository.findMany({
+        where: {
+          categories: {
+            some: {
+              id,
+            },
+          },
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: sort,
+      }),
     ]);
 
-    // Have check product name already exists in db?
-    if (foundProduct)
-      throw new NotFoundException(PRODUCT_ERRORS.PRODUCT_02.message);
+    return {
+      count,
+      data,
+    };
+  }
 
-    // Have check id of category unique ?
-    if (duplicates.length > 0)
-      throw new BadRequestException(PRODUCT_ERRORS.PRODUCT_03.message);
+  async getProductsPublish(query: BaseQueryParams) {
+    const { page = 1, limit = 10, search, sort } = query;
+
+    const [count, data] = await Promise.all([
+      this._productRepository.count({
+        where: {
+          name: {
+            contains: search,
+          },
+          deletedAt: null,
+          isPublished: true,
+        },
+      }),
+      this._productRepository.findMany({
+        where: {
+          name: {
+            contains: search,
+          },
+          deletedAt: null,
+          isPublished: true,
+        },
+        include: {
+          categories: true,
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: sort,
+      }),
+    ]);
+
+    return {
+      count,
+      data,
+    };
+  }
+
+  async getProductsUnPublish(query: BaseQueryParams) {
+    const { page = 1, limit = 10, search, sort } = query;
+
+    const [count, data] = await Promise.all([
+      this._productRepository.count({
+        where: {
+          name: {
+            contains: search,
+          },
+          deletedAt: null,
+          isPublished: false,
+        },
+      }),
+      this._productRepository.findMany({
+        where: {
+          name: {
+            contains: search,
+          },
+          deletedAt: null,
+          isPublished: false,
+        },
+        include: {
+          categories: true,
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: sort,
+      }),
+    ]);
+
+    return {
+      count,
+      data,
+    };
+  }
+
+  async updateInfoProduct(id: string, data: UpdateProductDto) {
+    const { name, categoryId, ...rest } = data;
+
+    const [foundProduct, foundCategory] = await Promise.all([
+      this._productRepository.findOne({ where: { id } }),
+      this._categoryService.findOne(
+        { id: categoryId },
+        {
+          id: true,
+          parent: {
+            select: {
+              id: true,
+              parent: {
+                select: {
+                  id: true,
+                },
+              },
+            },
+          },
+        }
+      ),
+    ]);
+
+    if (!foundProduct) {
+      throw new NotFoundException(PRODUCT_ERRORS.PRODUCT_01.message);
+    }
+
+    // // Have check product name already exists in db?
+    if (foundProduct.name === name) {
+      throw new ConflictException(PRODUCT_ERRORS.PRODUCT_02.message);
+    }
+
+    // Have check category exists in db?
+    if (!foundCategory) {
+      throw new NotFoundException(CATEGORY_ERRORS.CATEGORY_04.message);
+    }
+
+    const categoryIds = this._recursiveCategoryIds(foundCategory);
 
     await this._productRepository.update({
       where: {
         id,
       },
       data: {
-        ...data,
+        name,
+        ...rest,
         categories: {
           set: [],
           connect: categoryIds.map((id) => ({ id })),
@@ -150,38 +285,102 @@ export class ProductService {
       },
     });
     return {
-      message: PRODUCT_SUCCESS.UPDATE_PRODUCT,
+      success: true,
     };
   }
 
   async publishProduct(id: string) {
-    await this._productRepository.update({
+    const foundProduct = await this._productRepository.findOne({
       where: {
         id,
+        deletedAt: null,
+      },
+    });
+
+    if (!foundProduct) {
+      throw new NotFoundException(PRODUCT_ERRORS.PRODUCT_01.message);
+    }
+
+    const result = await this._productRepository.update({
+      where: {
+        id,
+        deletedAt: null,
       },
       data: {
         isPublished: true,
       },
+      select: {
+        id: true,
+        name: true,
+        categories: {
+          select: {
+            id: true,
+            name: true,
+            level: true,
+          },
+        },
+      },
     });
 
-    return {
-      message: PRODUCT_SUCCESS.PUBLISH_PRODUCT_SUCCESS,
-    };
+    return { ...result };
   }
 
   async unPublishProduct(id: string) {
-    await this._productRepository.update({
+    const foundProduct = await this._productRepository.findOne({
       where: {
         id,
+        deletedAt: null,
+      },
+    });
+
+    if (!foundProduct) {
+      throw new NotFoundException(PRODUCT_ERRORS.PRODUCT_01.message);
+    }
+
+    const result = await this._productRepository.update({
+      where: {
+        id,
+        deletedAt: null,
       },
       data: {
-        isPublished: true,
+        isPublished: false,
+      },
+      select: {
+        id: true,
+        name: true,
+        categories: {
+          select: {
+            id: true,
+            name: true,
+            level: true,
+          },
+        },
       },
     });
 
     return {
-      message: PRODUCT_SUCCESS.UNPUBLISH_PRODUCT_SUCCESS,
+      ...result,
     };
+  }
+
+  // TODO : when having order then check condition remove
+  async removeProduct(id: string) {
+    const foundProduct = await this._productRepository.findOne({
+      where: {
+        id,
+        deletedAt: null,
+      },
+    });
+
+    if (!foundProduct) {
+      throw new NotFoundException(PRODUCT_ERRORS.PRODUCT_01.message);
+    }
+
+    await this._productRepository.delete({
+      id,
+    });
+
+    return {};
   }
 
   /** ============================== Func general ============================== */
@@ -190,22 +389,22 @@ export class ProductService {
       where: {
         name,
       },
+      select: {
+        categories: true,
+      },
     });
   }
 
-  private async _findProductById(id: string) {
-    return await this._productRepository
-      .findOneOrThrow({
-        where: {
-          id,
-          deletedAt: null,
-        },
-        include: {
-          categories: true,
-        },
-      })
-      .catch(() => {
-        throw new NotFoundException(PRODUCT_ERRORS.PRODUCT_01.message);
-      });
+  private _recursiveCategoryIds(categoryObject) {
+    let categoryIds = [categoryObject.id];
+
+    if (isObject(categoryObject.parent)) {
+      categoryIds = [
+        ...categoryIds,
+        ...this._recursiveCategoryIds(categoryObject.parent),
+      ];
+    }
+
+    return categoryIds;
   }
 }

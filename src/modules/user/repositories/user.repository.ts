@@ -11,8 +11,8 @@ export class UserRepository {
     this._model = this._prismaService.user;
   }
 
-  async create(data: Prisma.UserCreateInput) {
-    return this._model.create({ data });
+  async create(data: Prisma.UserCreateInput, select?: Prisma.UserSelect) {
+    return this._model.create({ data, select });
   }
 
   async findOne(params: Prisma.UserFindFirstArgs) {

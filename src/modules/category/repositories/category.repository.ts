@@ -11,8 +11,11 @@ export class CategoryRepository {
     this._model = this._prismaService.category;
   }
 
-  async create(data: Prisma.CategoryCreateInput) {
-    return this._model.create({ data });
+  async create(
+    data: Prisma.CategoryCreateInput,
+    select?: Prisma.CategorySelect
+  ) {
+    return this._model.create({ data, select });
   }
 
   async createMany(data: Prisma.CategoryCreateManyInput) {
@@ -21,9 +24,9 @@ export class CategoryRepository {
 
   async findOne(
     where: Prisma.CategoryWhereInput,
-    include?: Prisma.CategoryInclude
+    select?: Prisma.CategorySelect
   ) {
-    return this._model.findFirst({ where, include });
+    return this._model.findFirst({ where, select });
   }
 
   async findCategoryByName(name: string) {

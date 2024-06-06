@@ -19,29 +19,40 @@ import { UserRepository } from "../repositories";
 export class UserSerivce {
   constructor(private readonly _userRepository: UserRepository) {}
 
+  /** ============================== CRUD ============================== */
   async createSaler(data: CreateSalerDto) {
     const { email, password, firstName, lastName } = data;
     const foundUser = await this.findUserByEmail(email);
 
-    if (foundUser) throw new ConflictException(USER_ERRORS.USER_02.message);
+    if (foundUser) {
+      throw new ConflictException(USER_ERRORS.USER_02.message);
+    }
 
     const salt = await bcrypt.genSalt(10);
 
-    await this.create({
-      email,
-      firstName,
-      lastName,
-      password: await bcrypt.hash(password, salt),
-      adminStatus: AccountStatus.INACTIVE,
-      userStatus: AccountStatus.INACTIVE,
-      isAdmin: false,
-      isSaler: true,
-      isUser: false,
-      salerStatus: AccountStatus.ACTIVE,
-    });
+    const result = await this.create(
+      {
+        email,
+        firstName,
+        lastName,
+        password: await bcrypt.hash(password, salt),
+        adminStatus: AccountStatus.INACTIVE,
+        userStatus: AccountStatus.INACTIVE,
+        isAdmin: false,
+        isSaler: true,
+        isUser: false,
+        salerStatus: AccountStatus.ACTIVE,
+      },
+      {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+      }
+    );
 
     return {
-      message: USER_SUCCESS.CREATE_SALER,
+      ...result,
     };
   }
 
@@ -105,33 +116,31 @@ export class UserSerivce {
     }
 
     return {
-      message: USER_SUCCESS.UNBLOCK_ACCOUNT,
+      success: true,
     };
   }
 
   async removeAccount(id: string) {
-    await Promise.all([
-      this.findOneOrThrow({
-        where: {
-          id,
-        },
-      }).catch(() => {
-        throw new NotFoundException(USER_ERRORS.USER_01.message);
-      }),
-      this.update({
+    await this.findOneOrThrow({
+      where: {
+        id,
+      },
+    }).catch(() => {
+      throw new NotFoundException(USER_ERRORS.USER_01.message);
+    }),
+      await this.update({
         where: {
           id,
         },
         data: {
           deletedAt: new Date(),
         },
-      }),
-    ]);
+      });
 
-    return {
-      message: USER_SUCCESS.DELETE_USER,
-    };
+    return {};
   }
+
+  /** ============================== Func general ============================== */
 
   async findAll(query: BaseQueryParams) {
     const { page = 1, limit = 10, search } = query;
@@ -188,8 +197,8 @@ export class UserSerivce {
     return this._userRepository.findOneOrThrow(params);
   }
 
-  async create(data: Prisma.UserCreateInput) {
-    return await this._userRepository.create(data);
+  async create(data: Prisma.UserCreateInput, select?: Prisma.UserSelect) {
+    return await this._userRepository.create(data, select);
   }
 
   async update(params: Prisma.UserUpdateArgs) {

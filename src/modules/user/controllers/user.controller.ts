@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Post,
   Query,
   Req,
@@ -25,11 +26,13 @@ import { BlockAccountValidator } from "../validators/block-account.validator";
 import { BlockAccountDto } from "../dtos";
 import { RequestUser } from "@common/decorators";
 import { JwtAccessPayload } from "@modules/auth/dtos";
+import { HttpStatusCode } from "axios";
 
 @Controller("admin/users")
 export class UserController {
   constructor(private readonly _userService: UserSerivce) {}
 
+  @HttpCode(HttpStatusCode.Ok)
   @UseGuards(AdminJwtAccessAuthGuard)
   @Get()
   async getUsers(
@@ -47,35 +50,52 @@ export class UserController {
   }
 
   // TODO Edit subadmin => saler
+  @HttpCode(HttpStatusCode.Created)
   @Post("create-saler")
   @UseGuards(AdminJwtAccessAuthGuard)
-  createSubadmin(
+  async createSubadmin(
     @Body(new JoiValidationPipe(CreateSubadminValidator))
     data: CreateSalerDto
   ) {
-    return this._userService.createSaler(data);
+    const result = await this._userService.createSaler(data);
+    return {
+      ...result,
+    };
   }
 
+  @HttpCode(HttpStatusCode.Ok)
   @Post("block")
   @UseGuards(AdminJwtAccessAuthGuard)
   blockSalerOrUser(
     @Body(new JoiValidationPipe(BlockAccountValidator)) data: BlockAccountDto
   ) {
-    return this._userService.blockSalerOrUser(data);
+    const result = this._userService.blockSalerOrUser(data);
+
+    return {
+      ...result,
+    };
   }
 
+  @HttpCode(HttpStatusCode.Ok)
   @Post("unblock")
   @UseGuards(AdminJwtAccessAuthGuard)
-  unBlockSalerOrUser(
+  async unBlockSalerOrUser(
     @Body(new JoiValidationPipe(UnBlockAccountValidator)) data: BlockAccountDto
   ) {
-    return this._userService.unBlockSalerOrUser(data);
+    const result = await this._userService.unBlockSalerOrUser(data);
+    return {
+      ...result,
+    };
   }
 
+  @HttpCode(HttpStatusCode.NoContent)
   @Delete(":id")
   @UseGuards(AdminJwtAccessAuthGuard)
   async removeAccount(@RequestUser() user: JwtAccessPayload) {
     const { id } = user;
-    return await this._userService.removeAccount(id);
+    const result = await this._userService.removeAccount(id);
+    return {
+      ...result,
+    };
   }
 }

@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -20,24 +21,25 @@ import { BaseQueryParams } from "@common/dtos";
 import { Request } from "express";
 import { ResponseService } from "@shared/response/response.service";
 import { UpdateProductDto } from "../dtos/update-product.dto.";
+import { HttpStatusCode } from "axios";
 
 @Controller("products")
 export class ProductController {
   constructor(private readonly _productService: ProductService) {}
 
+  @HttpCode(HttpStatusCode.Created)
   @UseGuards(AdminJwtAccessAuthGuard)
   @Post()
   async createProduct(
     @Body(new JoiValidationPipe(CreateProductValidator)) data: CreateProductDto
   ) {
-    return await this._productService.createProduct(data);
+    const result = await this._productService.createProduct(data);
+    return {
+      ...result,
+    };
   }
 
-  @Get(":id")
-  async getProduct(@Param("id") id: string) {
-    return await this._productService.getProduct(id);
-  }
-
+  @HttpCode(HttpStatusCode.Ok)
   @Get("")
   async getProducts(
     @Query(new JoiValidationPipe(BaseQueryParamsValidator))
@@ -54,41 +56,115 @@ export class ProductController {
     });
   }
 
+  @Get("categories/:id")
+  async getProductsByCategoryById(
+    @Query(new JoiValidationPipe(BaseQueryParamsValidator))
+    query: BaseQueryParams,
+    @Req() req: Request,
+    @Param("id") id: string
+  ) {
+    const { count, data } =
+      await this._productService.getProductsByCategoryById(query, id);
+
+    return ResponseService.paginateResponse({
+      count,
+      data,
+      query,
+      req,
+    });
+  }
+
+  @HttpCode(HttpStatusCode.Ok)
   @UseGuards(AdminJwtAccessAuthGuard)
   @Get("publishes")
-  async getProductsPublished(@Param("id") id: string) {
-    return "Get Products Published";
+  async getProductsPublish(
+    @Query(new JoiValidationPipe(BaseQueryParamsValidator))
+    query: BaseQueryParams,
+    @Req() req: Request
+  ) {
+    const { count, data } = await this._productService.getProductsPublish(
+      query
+    );
+
+    return ResponseService.paginateResponse({
+      count,
+      data,
+      query,
+      req,
+    });
   }
 
+  @HttpCode(HttpStatusCode.Ok)
   @Get("un-publishes")
-  getProductsUnPublished() {
-    return "get products";
+  async getProductsUnPublished(
+    @Query(new JoiValidationPipe(BaseQueryParamsValidator))
+    query: BaseQueryParams,
+    @Req() req: Request
+  ) {
+    const { count, data } = await this._productService.getProductsUnPublish(
+      query
+    );
+
+    return ResponseService.paginateResponse({
+      count,
+      data,
+      query,
+      req,
+    });
   }
 
+  @HttpCode(HttpStatusCode.Ok)
   @UseGuards(AdminJwtAccessAuthGuard)
   @Patch(":id")
-  updateInfoProduct(
+  async updateInfoProduct(
     @Param("id") id: string,
     @Body(new JoiValidationPipe(UpdateProductValidator)) data: UpdateProductDto
   ) {
-    return this._productService.updateInfoProduct(id, data);
+    const result = await this._productService.updateInfoProduct(id, data);
+    return {
+      ...result,
+    };
   }
 
+  @HttpCode(HttpStatusCode.Ok)
   @UseGuards(AdminJwtAccessAuthGuard)
   @Patch("publish/:id")
   async publishProduct(@Param("id") id: string) {
-    return await this._productService.publishProduct(id);
+    const result = await this._productService.publishProduct(id);
+
+    return {
+      ...result,
+    };
   }
 
+  @HttpCode(HttpStatusCode.Ok)
   @UseGuards(AdminJwtAccessAuthGuard)
   @Patch("un-publish/:id")
   async unPublishProduct(@Param("id") id: string) {
-    return await this._productService.unPublishProduct(id);
+    const result = await this._productService.unPublishProduct(id);
+
+    return {
+      ...result,
+    };
   }
 
   // TODO add table order handle after
+  @HttpCode(HttpStatusCode.NoContent)
   @Delete(":id")
-  removeProduct(@Param("id") id: string) {
-    return "Delete product";
+  async removeProduct(@Param("id") id: string) {
+    const result = await this._productService.removeProduct(id);
+    return {
+      ...result,
+    };
+  }
+
+  @HttpCode(HttpStatusCode.Created)
+  @Get(":id")
+  async getProduct(@Param("id") id: string) {
+    const result = await this._productService.getProduct(id);
+
+    return {
+      ...result,
+    };
   }
 }

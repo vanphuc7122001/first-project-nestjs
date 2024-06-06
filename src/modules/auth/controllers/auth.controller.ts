@@ -4,6 +4,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Post,
   Req,
   Res,
@@ -36,48 +37,72 @@ import {
 import { Request, Response } from "express";
 import { VerifyForgotPasswordDto } from "../dtos";
 import { VerifyForgotPasswordValidator } from "../validators/verify-forgot-password.validator";
+import { HttpStatusCode } from "axios";
 
 @Controller("general/auth")
 export class AuthController {
   constructor(private readonly _authService: AuthService) {}
 
+  @HttpCode(HttpStatusCode.Ok)
   @Post("get-started")
   async getStarted(
     @Body(new JoiValidationPipe(GetStartedValidator)) data: GetStartedDto
   ) {
-    return this._authService.getStarted(data);
+    const result = await this._authService.getStarted(data);
+    return {
+      ...result,
+    };
   }
 
+  @HttpCode(HttpStatusCode.Created)
   @Post("register")
   async register(
     @Body(new JoiValidationPipe(RegisterValidator)) data: RegisterDto
   ) {
-    return this._authService.register(data);
+    const result = await this._authService.register(data);
+    return {
+      ...result,
+    };
   }
 
+  @HttpCode(HttpStatusCode.Ok)
   @UseGuards(LocalAuthGuard)
   @Post("login")
   async login(@Req() req: Request) {
-    return this._authService.userLogin(req.user as JwtAccessPayload);
+    const result = await this._authService.userLogin(
+      req.user as JwtAccessPayload
+    );
+    return {
+      ...result,
+    };
   }
 
+  @HttpCode(HttpStatusCode.Ok)
   @Post("refresh-token")
   async refreshToken(
     @Body(new JoiValidationPipe(RefreshTokenValidator)) data: RefreshTokenDto
   ) {
     const { refresh } = data;
-    return this._authService.userRefreshToken(refresh);
+    const result = await this._authService.userRefreshToken(refresh);
+    return {
+      ...result,
+    };
   }
 
+  @HttpCode(HttpStatusCode.Ok)
   @Post("forgot-password")
   async forgotPassword(
     @Body(new JoiValidationPipe(ForgotPasswordValidator))
     data: ForgotPasswordDto
   ) {
     const { email } = data;
-    return this._authService.forgotPassword(email);
+    const result = await this._authService.forgotPassword(email);
+    return {
+      ...result,
+    };
   }
 
+  @HttpCode(HttpStatusCode.Ok)
   @Post("verify-forgot-password")
   async verifyForgotPassword(
     @Body(new JoiValidationPipe(VerifyForgotPasswordValidator))
@@ -94,11 +119,15 @@ export class AuthController {
     return res.redirect(url);
   }
 
+  @HttpCode(HttpStatusCode.Ok)
   @Post("reset-password")
   async resetPassword(
     @Body(new JoiValidationPipe(ResetPasswordValidator)) data: ResetPasswordDto
   ) {
-    return this._authService.resetPassword(data);
+    const result = await this._authService.resetPassword(data);
+    return {
+      ...result,
+    };
   }
 
   // After login
@@ -110,7 +139,10 @@ export class AuthController {
     @RequestUser() user: JwtAccessPayload
   ) {
     const { id } = user;
-    return this._authService.changePassword(data, id);
+    const result = await this._authService.changePassword(data, id);
+    return {
+      ...result,
+    };
   }
 
   @UseGuards(JwtAccessAuthGuard)
@@ -118,6 +150,9 @@ export class AuthController {
   @UseGuards()
   async getOwnProfile(@RequestUser() user: JwtAccessPayload) {
     const { id } = user;
-    return await this._authService.getOwnProfile(id);
+    const result = await this._authService.getOwnProfile(id);
+    return {
+      ...result,
+    };
   }
 }

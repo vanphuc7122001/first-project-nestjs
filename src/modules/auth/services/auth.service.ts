@@ -120,7 +120,9 @@ export class AuthService {
 
     const foundUser = await this._userService.findUserByEmail(email);
 
-    if (foundUser) throw new ConflictException(AUTH_ERRORS.AUTH_01.message);
+    if (foundUser) {
+      throw new ConflictException(AUTH_ERRORS.AUTH_01.message);
+    }
 
     const user = await this._userService.create({
       email,
@@ -141,9 +143,11 @@ export class AuthService {
       (key) => excludeField.includes(key) && delete user[key]
     );
 
-    const result = await this.generateTokensForUser(user);
+    const { accessToken, refreshToken } = await this.generateTokensForUser(
+      user
+    );
 
-    return new HttpSuccessResponse(result);
+    return { accessToken, refreshToken };
   }
 
   /**
@@ -152,8 +156,9 @@ export class AuthService {
   async userLogin(data: JwtAccessPayload) {
     const excludeField = ["password", "createdAt", "updatedAt", "deletedAt"];
 
-    if (!data.isUser || data.userStatus !== AccountStatus.ACTIVE)
+    if (!data.isUser || data.userStatus !== AccountStatus.ACTIVE) {
       throw new ForbiddenException(AUTH_ERRORS.AUTH_02.message);
+    }
 
     Object.keys(data).forEach(
       (key) => excludeField.includes(key) && delete data[key]
@@ -167,34 +172,38 @@ export class AuthService {
   async salerLogin(data: JwtAccessPayload) {
     const excludeField = ["password", "createdAt", "updatedAt", "deletedAt"];
 
-    if (!data.isSaler || data.salerStatus !== AccountStatus.ACTIVE)
+    if (!data.isSaler || data.salerStatus !== AccountStatus.ACTIVE) {
       throw new ForbiddenException(AUTH_ERRORS.AUTH_02.message);
+    }
 
     Object.keys(data).forEach(
       (key) => excludeField.includes(key) && delete data[key]
     );
 
-    const result = await this.generateTokensForUser(data);
+    const { accessToken, refreshToken } = await this.generateTokensForUser(
+      data
+    );
 
-    return new HttpSuccessResponse(result);
+    return { accessToken, refreshToken };
   }
 
   async userRefreshToken(refresh: string) {
     const verifyToken = await this._verifyToken(refresh, ACCESS_TOKEN);
 
-    const foundUser = await this._userService
-      .findOneOrThrow({
-        where: {
-          id: (verifyToken as JwtPayload).id,
-          deletedAt: null,
-        },
-      })
-      .catch(() => {
-        throw new UnauthorizedException(AUTH_ERRORS.AUTH_03.message);
-      });
+    const foundUser = await this._userService.findOne({
+      where: {
+        id: (verifyToken as JwtPayload).id,
+        deletedAt: null,
+      },
+    });
 
-    if (!foundUser.isUser || foundUser.userStatus !== AccountStatus.ACTIVE)
+    if (!foundUser) {
+      throw new UnauthorizedException(AUTH_ERRORS.AUTH_03.message);
+    }
+
+    if (!foundUser.isUser || foundUser.userStatus !== AccountStatus.ACTIVE) {
       throw new ForbiddenException(AUTH_ERRORS.AUTH_04.message);
+    }
 
     const payload: JwtAccessPayload = {
       id: foundUser.id,
@@ -209,9 +218,11 @@ export class AuthService {
       salerStatus: foundUser.salerStatus,
     };
 
-    return new HttpSuccessResponse({
-      accessToken: this._signPayload(payload, ACCESS_TOKEN),
-    });
+    const accessToken = this._signPayload(payload, ACCESS_TOKEN);
+
+    return {
+      accessToken,
+    };
   }
 
   async adminRefreshToken(data: RefreshTokenDto) {
@@ -220,19 +231,20 @@ export class AuthService {
       ADMIN_REFRESH_TOKEN
     );
 
-    const foundUser = await this._userService
-      .findOneOrThrow({
-        where: {
-          id: (verifyToken as JwtPayload).id,
-          deletedAt: null,
-        },
-      })
-      .catch(() => {
-        throw new UnauthorizedException(AUTH_ERRORS.AUTH_03.message);
-      });
+    const foundUser = await this._userService.findOne({
+      where: {
+        id: (verifyToken as JwtPayload).id,
+        deletedAt: null,
+      },
+    });
 
-    if (!foundUser.isAdmin || foundUser.adminStatus !== AccountStatus.ACTIVE)
+    if (!foundUser) {
+      throw new UnauthorizedException(AUTH_ERRORS.AUTH_03.message);
+    }
+
+    if (!foundUser.isAdmin || foundUser.adminStatus !== AccountStatus.ACTIVE) {
       throw new ForbiddenException(AUTH_ERRORS.AUTH_04.message);
+    }
 
     const payload: JwtAccessPayload = {
       id: foundUser.id,
@@ -247,27 +259,30 @@ export class AuthService {
       salerStatus: foundUser.salerStatus,
     };
 
+    const accessToken = this._signPayload(payload, ADMIN_ACCESS_TOKEN);
+
     return {
-      accessToken: this._signPayload(payload, ADMIN_ACCESS_TOKEN),
+      accessToken,
     };
   }
 
   async salerRefreshToken(data: RefreshTokenDto) {
     const verifyToken = await this._verifyToken(data.refresh, REFRESH_TOKEN);
 
-    const foundUser = await this._userService
-      .findOneOrThrow({
-        where: {
-          id: (verifyToken as JwtPayload).id,
-          deletedAt: null,
-        },
-      })
-      .catch(() => {
-        throw new UnauthorizedException(AUTH_ERRORS.AUTH_03.message);
-      });
+    const foundUser = await this._userService.findOne({
+      where: {
+        id: (verifyToken as JwtPayload).id,
+        deletedAt: null,
+      },
+    });
 
-    if (!foundUser.isSaler || foundUser.salerStatus !== AccountStatus.ACTIVE)
+    if (!foundUser) {
+      throw new UnauthorizedException(AUTH_ERRORS.AUTH_03.message);
+    }
+
+    if (!foundUser.isSaler || foundUser.salerStatus !== AccountStatus.ACTIVE) {
       throw new ForbiddenException(AUTH_ERRORS.AUTH_04.message);
+    }
 
     const payload: JwtAccessPayload = {
       id: foundUser.id,
@@ -282,8 +297,10 @@ export class AuthService {
       salerStatus: foundUser.salerStatus,
     };
 
+    const accessToken = this._signPayload(payload, ACCESS_TOKEN);
+
     return {
-      accessToken: this._signPayload(payload, ACCESS_TOKEN),
+      accessToken,
     };
   }
 
@@ -307,11 +324,13 @@ export class AuthService {
       passwordInDb
     );
 
-    if (isNewPasswordMatchOldPassword)
+    if (isNewPasswordMatchOldPassword) {
       throw new BadRequestException(AUTH_ERRORS.AUTH_05.message);
+    }
 
-    if (!isOldPasswordMatchOldPasswordInDB)
+    if (!isOldPasswordMatchOldPasswordInDB) {
       throw new BadRequestException(AUTH_ERRORS.AUTH_06.message);
+    }
 
     await this._userService.update({
       data: {
@@ -323,31 +342,31 @@ export class AuthService {
     });
 
     return {
-      message: AUTH_SUCCESS.PASSWORD_UPDATE_SUCCESS,
+      success: true,
     };
   }
 
   async forgotPassword(email: string) {
-    const found = await this._userService
-      .findOneOrThrow({
-        where: {
-          email,
-          deletedAt: null,
-        },
-      })
-      .catch(() => {
-        throw new NotFoundException(AUTH_ERRORS.AUTH_07.message);
-      });
+    const foundUser = await this._userService.findOne({
+      where: {
+        email,
+        deletedAt: null,
+      },
+    });
+
+    if (!foundUser) {
+      throw new NotFoundException(AUTH_ERRORS.AUTH_07.message);
+    }
 
     // sign for got password token
-    const token = this._signPayload({ id: found.id }, FORGOT_TOKEN);
+    const token = this._signPayload({ id: foundUser.id }, FORGOT_TOKEN);
     await Promise.all([
       this._userService.update({
         data: {
           forgetPasswordToken: token,
         },
         where: {
-          id: found.id,
+          id: foundUser.id,
         },
       }),
       this._sendMailQueue.sendMailForgotPassword({
@@ -358,35 +377,37 @@ export class AuthService {
     ]);
 
     return {
-      message: AUTH_SUCCESS.CHECK_MAIL_FORGOT_PASS,
+      success: true,
     };
   }
 
   async verifyForgotPassword(token: string) {
-    await this._verifyToken(token, FORGOT_TOKEN);
+    const result = await this._verifyToken(token, FORGOT_TOKEN);
+    return result;
   }
 
   async resetPassword(data: ResetPasswordDto) {
     const { new_password, forgot_password_token } = data;
 
-    const foundUser = await this._userService
-      .findOneOrThrow({
-        where: {
-          forgetPasswordToken: forgot_password_token,
-          deletedAt: null,
-        },
-      })
-      .catch(() => {
-        throw new NotFoundException(AUTH_ERRORS.AUTH_08.message);
-      });
+    const foundUser = await this._userService.findOne({
+      where: {
+        forgetPasswordToken: forgot_password_token,
+        deletedAt: null,
+      },
+    });
+
+    if (!foundUser) {
+      throw new NotFoundException(AUTH_ERRORS.AUTH_08.message);
+    }
 
     const isCurrentPasswordMatchOldPassword = await this._comparePasswords(
       new_password,
       foundUser.password
     );
 
-    if (isCurrentPasswordMatchOldPassword)
+    if (isCurrentPasswordMatchOldPassword) {
       throw new BadRequestException(AUTH_ERRORS.AUTH_05.message);
+    }
 
     await this._userService.update({
       where: {
@@ -399,7 +420,7 @@ export class AuthService {
     });
 
     return {
-      message: AUTH_SUCCESS.RESET_PASS,
+      success: true,
     };
   }
 
@@ -416,42 +437,45 @@ export class AuthService {
       });
 
     return {
-      message: AUTH_SUCCESS.EMAIL_EXIST,
+      success: true,
     };
   }
 
   async adminLogin(data: JwtAccessPayload) {
     const excludeField = ["password", "createdAt", "updatedAt", "deletedAt"];
-    if (!data.isAdmin || data.adminStatus !== AccountStatus.ACTIVE)
+    if (!data.isAdmin || data.adminStatus !== AccountStatus.ACTIVE) {
       throw new ForbiddenException(AUTH_ERRORS.AUTH_02.message);
+    }
 
     Object.keys(data).forEach(
       (key) => excludeField.includes(key) && delete data[key]
     );
 
-    const result = await this.generateTokensForAdmin(data);
+    const { accessToken, refreshToken } = await this.generateTokensForAdmin(
+      data
+    );
 
-    return new HttpSuccessResponse(result);
+    return { accessToken, refreshToken };
   }
 
   async getOwnProfile(id: string) {
-    return new HttpSuccessResponse(
-      await this._userService
-        .findOneOrThrow({
-          where: {
-            id,
-            deletedAt: null,
-          },
-          select: {
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        })
-        .catch(() => {
-          throw new NotFoundException(AUTH_ERRORS.AUTH_09.message);
-        })
-    );
+    const result = await this._userService.findOne({
+      where: {
+        id,
+        deletedAt: null,
+      },
+      select: {
+        firstName: true,
+        lastName: true,
+        email: true,
+      },
+    });
+
+    if (!result) {
+      throw new NotFoundException(AUTH_ERRORS.AUTH_09.message);
+    }
+
+    return result;
   }
 
   /** ============================== Passport ============================== */
@@ -459,16 +483,18 @@ export class AuthService {
   async validateUser(email: string, password: string) {
     const user = await this._userService.findUserByEmail(email);
 
-    if (!user || !user.password)
+    if (!user || !user.password) {
       throw new UnauthorizedException(AUTH_ERRORS.AUTH_10.message);
+    }
 
     const isPasswordValid = await this._comparePasswords(
       password,
       user.password
     );
 
-    if (!isPasswordValid)
+    if (!isPasswordValid) {
       throw new UnauthorizedException(AUTH_ERRORS.AUTH_11.message);
+    }
 
     return user;
   }
@@ -476,8 +502,9 @@ export class AuthService {
   async validatePermissionAdmin(payload: JwtAccessPayload) {
     const { email, isAdmin, adminStatus } = payload;
 
-    if (!isAdmin || adminStatus !== AccountStatus.ACTIVE)
+    if (!isAdmin || adminStatus !== AccountStatus.ACTIVE) {
       throw new ForbiddenException(AUTH_ERRORS.AUTH_12.message);
+    }
 
     return await this._userService.findUserByEmail(email);
   }
@@ -485,8 +512,9 @@ export class AuthService {
   async validatePermissionUser(payload: JwtAccessPayload) {
     const { email, isUser, userStatus } = payload;
 
-    if (!isUser || userStatus !== AccountStatus.ACTIVE)
+    if (!isUser || userStatus !== AccountStatus.ACTIVE) {
       throw new ForbiddenException(AUTH_ERRORS.AUTH_12.message);
+    }
 
     return await this._userService.findUserByEmail(email);
   }
@@ -494,8 +522,9 @@ export class AuthService {
   async validatePermissionSaler(payload: JwtAccessPayload) {
     const { email, isSaler, salerStatus } = payload;
 
-    if (!isSaler || salerStatus !== AccountStatus.ACTIVE)
+    if (!isSaler || salerStatus !== AccountStatus.ACTIVE) {
       throw new ForbiddenException(AUTH_ERRORS.AUTH_12.message);
+    }
 
     return await this._userService.findUserByEmail(email);
   }
@@ -549,7 +578,9 @@ export class AuthService {
   private async _verifyToken(token: string, type: string) {
     return new Promise<JwtAccessPayload>((resolve, reject) => {
       verify(token, this._jwtKeys[type], (err, decoded) => {
-        if (err) throw reject(err);
+        if (err) {
+          throw reject(err);
+        }
 
         resolve(decoded as JwtAccessPayload);
       });

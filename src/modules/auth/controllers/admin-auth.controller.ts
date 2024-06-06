@@ -1,6 +1,13 @@
 import { AdminJwtAccessAuthGuard } from "./../guards";
 import { JoiValidationPipe } from "@common/pipes";
-import { Body, Controller, Post, Req, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  HttpCode,
+  Post,
+  Req,
+  UseGuards,
+} from "@nestjs/common";
 import {
   ChangePasswordDto,
   GetStartedDto,
@@ -17,34 +24,51 @@ import {
   RefreshTokenValidator,
 } from "../validators";
 import { RequestUser } from "@common/decorators";
+import { HttpStatusCode } from "axios";
 
 @Controller("admin/auth")
 export class AdminAuthController {
   constructor(private readonly _authService: AuthService) {}
 
+  @HttpCode(HttpStatusCode.Ok)
   @Post("get-started")
   async getStarted(
     @Body(new JoiValidationPipe(GetStartedValidator)) data: GetStartedDto
   ) {
-    return this._authService.getStarted(data);
+    const result = await this._authService.getStarted(data);
+
+    return {
+      ...result,
+    };
   }
 
+  @HttpCode(HttpStatusCode.Ok)
   @UseGuards(LocalAuthGuard)
   @Post("login")
   async login(
     @Req() req,
     @Body(new JoiValidationPipe(LoginValidator)) data: LoginDto
   ) {
-    return this._authService.adminLogin(req.user as JwtAccessPayload);
+    const result = await this._authService.adminLogin(
+      req.user as JwtAccessPayload
+    );
+    return {
+      ...result,
+    };
   }
 
+  @HttpCode(HttpStatusCode.Ok)
   @Post("refresh-token")
   async refreshToken(
     @Body(new JoiValidationPipe(RefreshTokenValidator)) data: RefreshTokenDto
   ) {
-    return this._authService.adminRefreshToken(data);
+    const result = await this._authService.adminRefreshToken(data);
+    return {
+      ...result,
+    };
   }
 
+  @HttpCode(HttpStatusCode.Ok)
   @UseGuards(AdminJwtAccessAuthGuard)
   @Post("change-password")
   async changePassword(
@@ -53,6 +77,9 @@ export class AdminAuthController {
     @RequestUser() user: JwtAccessPayload
   ) {
     const { id } = user;
-    return this._authService.changePassword(data, id);
+    const result = await this._authService.changePassword(data, id);
+    return {
+      ...result,
+    };
   }
 }
