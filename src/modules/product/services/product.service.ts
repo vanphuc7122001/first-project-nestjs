@@ -1,10 +1,9 @@
+import { CATEGORY_ERRORS, PRODUCT_ERRORS } from "src/content/errors";
 import {
-  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { CATEGORY_ERRORS, PRODUCT_ERRORS } from "src/content/errors";
 
 import { BaseQueryParams } from "@common/dtos";
 import { CategoryService } from "@modules/category/services";

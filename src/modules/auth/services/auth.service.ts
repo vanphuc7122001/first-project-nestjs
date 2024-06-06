@@ -31,10 +31,10 @@ import { JwtPayload, SignOptions, decode, sign, verify } from "jsonwebtoken";
 import { AUTH_ERRORS } from "src/content/errors";
 import { AUTH_SUCCESS } from "src/content/succeses";
 import { AccountStatus } from "../enums";
+import { AuthQueueService } from "./auth-queue.service";
 import { CONFIG_VAR } from "@config/index";
 import { ConfigService } from "@nestjs/config";
 import { HttpSuccessResponse } from "@common/responses";
-import { SendMailQueue } from "@shared/email/services";
 import { UserSerivce } from "@modules/user/services";
 
 export type TokenType =
@@ -67,7 +67,7 @@ export class AuthService {
   constructor(
     private readonly _configService: ConfigService,
     private readonly _userService: UserSerivce,
-    private readonly _sendMailQueue: SendMailQueue
+    private readonly _authQueueService: AuthQueueService
   ) {
     this._jwtKeys = {
       [ACCESS_TOKEN]: this._configService.get(
@@ -369,11 +369,7 @@ export class AuthService {
           id: foundUser.id,
         },
       }),
-      this._sendMailQueue.sendMailForgotPassword({
-        forgotPasswordToken: token,
-        toAddress: email,
-        subject: "Forgot password",
-      }),
+      this._authQueueService.addJobSendForgotPasswordMail(token, email), // handle after
     ]);
 
     return {
@@ -522,6 +518,7 @@ export class AuthService {
   async validatePermissionSaler(payload: JwtAccessPayload) {
     const { email, isSaler, salerStatus } = payload;
 
+    console.log("is saler", isSaler, "saler status", salerStatus);
     if (!isSaler || salerStatus !== AccountStatus.ACTIVE) {
       throw new ForbiddenException(AUTH_ERRORS.AUTH_12.message);
     }

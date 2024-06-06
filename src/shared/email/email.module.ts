@@ -1,8 +1,7 @@
-import { EmailService, SendMailQueue } from "./services";
 import { Global, Module } from "@nestjs/common";
 
 import { BullModule } from "@nestjs/bull";
-import { MailConsumer } from "./consumer";
+import { EmailService } from "./services";
 
 @Global()
 @Module({
@@ -11,7 +10,7 @@ import { MailConsumer } from "./consumer";
       name: "email",
     }),
   ],
-  providers: [EmailService, BullModule, SendMailQueue, MailConsumer],
-  exports: [EmailService, SendMailQueue, SendMailQueue],
+  providers: [EmailService, BullModule],
+  exports: [EmailService],
 })
 export class EmailModule {}

@@ -15,20 +15,35 @@ import {
 import { CreateProductValidator, UpdateProductValidator } from "../validators";
 import { ProductService } from "../services";
 import { CreateProductDto } from "../dtos/create-product.dto";
-import { AdminJwtAccessAuthGuard } from "@modules/auth/guards";
+import {
+  AdminJwtAccessAuthGuard,
+  SalerJwtAccessAuthGuard,
+} from "@modules/auth/guards";
 import { BaseQueryParamsValidator } from "@common/validators";
 import { BaseQueryParams } from "@common/dtos";
 import { Request } from "express";
 import { ResponseService } from "@shared/response/response.service";
 import { UpdateProductDto } from "../dtos/update-product.dto.";
 import { HttpStatusCode } from "axios";
+import { AuthGuard } from "@nestjs/passport";
+import {
+  ADMIN_JWT_ACCESS_STRATEGY,
+  JWT_ACCESS_STRATEGY,
+  SALER_JWT_ACCESS_STRATEGY,
+} from "@modules/auth/strategies";
 
 @Controller("products")
 export class ProductController {
   constructor(private readonly _productService: ProductService) {}
 
   @HttpCode(HttpStatusCode.Created)
-  @UseGuards(AdminJwtAccessAuthGuard)
+  @UseGuards(
+    AuthGuard([
+      SALER_JWT_ACCESS_STRATEGY,
+      ADMIN_JWT_ACCESS_STRATEGY,
+      JWT_ACCESS_STRATEGY,
+    ])
+  )
   @Post()
   async createProduct(
     @Body(new JoiValidationPipe(CreateProductValidator)) data: CreateProductDto
