@@ -33,5 +33,7 @@ export const ConfigSchema = Joi.object()
     [CONFIG_VAR.SMTP_PORT]: Joi.string().trim().required(),
     [CONFIG_VAR.SMTP_EMAIL]: Joi.string().trim().required(),
     [CONFIG_VAR.SMTP_PASS]: Joi.string().trim().required(),
+    [CONFIG_VAR.REDIS_HOST]: Joi.string().trim().required(),
+    [CONFIG_VAR.REDIS_PORT]: Joi.number().required(),
   })
   .options({ stripUnknown: true });

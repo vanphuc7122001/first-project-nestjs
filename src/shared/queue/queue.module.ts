@@ -4,6 +4,7 @@ import { Global, Module } from "@nestjs/common";
 import { AuthConsumer } from "./consumers/auth.consumer";
 import { AuthModule } from "@modules/auth/auth.module";
 import { BullModule } from "@nestjs/bull";
+import { CONFIG_VAR } from "@config/config.constant";
 import { QUEUE_NAMES } from "./contants";
 import { QueueService } from "./queue.service";
 
@@ -16,8 +17,8 @@ import { QueueService } from "./queue.service";
       useFactory: (config: ConfigService) => {
         return {
           redis: {
-            host: "localhost", // thay config inject env.development
-            port: 6379,
+            host: config.get(CONFIG_VAR.REDIS_HOST),
+            port: config.get(CONFIG_VAR.REDIS_PORT),
           },
         };
       },

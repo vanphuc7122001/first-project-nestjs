@@ -26,6 +26,10 @@ export const CONFIG_VAR = {
   SMTP_PORT: "SMTP_PORT",
   SMTP_EMAIL: "SMTP_EMAIL",
   SMTP_PASS: "SMTP_PASS",
+
+  // Redis
+  REDIS_HOST: "REDIS_HOST",
+  REDIS_PORT: "REDIS_PORT",
 };
 
 export const DEFAULT_PORT = 3000;

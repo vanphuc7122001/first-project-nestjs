@@ -1,0 +1,21 @@
+model Order {
+    id String @id @default(uuid()) @db.VarChar(36)
+    
+    // TODO có nên bỏ user id không
+    userId String @db.VarChar(36) @@map("user_id") 
+    user User  @relation("userCreateOrder", fields: [userId], references: [id])
+
+    paymentMethod String @db.VarChar(100) @@map("payment_method")
+    shippingAddress String @db.VarChar(255) @@map("shipping_address")
+    shippingMethod String @db.VarChar(100) @@map("shipping_method")
+    phone   String @db.VarChar(10)
+    status String @db.VarChar(30)
+    total Float
+    note String @db.VarChar(255) 
+
+    orderDetails OrderDetail[]
+    trackingOrders TrackingOrder[]  
+    @@map("orders")
+}
+
+

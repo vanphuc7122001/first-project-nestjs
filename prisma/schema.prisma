@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -16,11 +16,11 @@ model Category {
   parentId String?    @map("parent_id") @db.VarChar(36)
   parent   Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
   children Category[] @relation("CategoryToCategory")
-  products Product[]
 
-  level     Int       @default(0)
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamptz(3)
+  level Int @default(0)
+
+  Product   Product? @relation(fields: [productId], references: [id])
+  productId String?  @db.VarChar(36)
 
   @@map("categories")
 }

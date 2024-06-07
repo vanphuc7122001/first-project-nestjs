@@ -5,12 +5,13 @@ model Product {
     description String?    @db.Text
     price       Float
     image       String     @db.VarChar(255)
-    categories  Category[]
-
-    quantity Int
-
+    quantity Int    
     isPublished Boolean @default(false) @map("is_publish")
+    sold Int @default(0) // cấm admin cập nhật
 
+    cartItems CartItem[]
+    orderDetails OrderDetail[]
+    categories  Category[]
     createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
     updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamptz(3)
     deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)

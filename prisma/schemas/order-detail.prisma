@@ -1,0 +1,16 @@
+model OrderDetail {
+    orderId String @db.VarChar(36) @map("order_id")
+    productId String @db.VarChar(36) @map("product_id")
+    
+    order Order @relation(fields: [orderId], references: [id])
+    product Product @relation(fields: [productId], references: [id])
+
+    producName String @db.VarChar(255) @map("product_name")
+    productPrice String @db.VarChar(255) @map("product_price")
+    productQuantity String @db.VarChar(255) @map("product_quantity")
+    
+
+    @@id([order_id, product_id])
+
+    @@map("order_details")
+}
