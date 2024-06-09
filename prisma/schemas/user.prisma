@@ -17,7 +17,7 @@ model User {
   deletedAt           DateTime? @map("deleted_at") @db.Timestamptz(3)
 
   // relationship
-  cartItem CartItem[]
+  cartItem CartItem[] 
   orders Order[]
   trackingOrders TrackingOrder[]
 

@@ -10,7 +10,7 @@ model OrderDetail {
     productQuantity String @db.VarChar(255) @map("product_quantity")
     
 
-    @@id([order_id, product_id])
+    @@id([orderId, productId])
 
     @@map("order_details")
 }

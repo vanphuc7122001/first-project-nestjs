@@ -20,27 +20,25 @@ export class CategoryService {
   async createCategory(data: CreateCategoryDto) {
     const { name, parentId } = data;
 
-    // const foundCategory = await this._categoryRepository.findCategoryByName(
-    //   name
-    // );
+    const foundName = await this._categoryRepository.findOne({
+      name,
+    });
 
-    // if (foundCategory) {
-    //   throw new ConflictException(CATEGORY_ERRORS.CATEGORY_01.message);
-    // }
-
-    if (!parentId) {
-      await this._categoryRepository.create({ name, level: 0 });
+    if (foundName) {
+      throw new ConflictException(CATEGORY_ERRORS.CATEGORY_01.message);
     }
 
-    const foundParent = await this._categoryRepository
-      .findOneOrThrow({
-        where: {
-          id: parentId,
-        },
-      })
-      .catch(() => {
-        throw new NotFoundException(CATEGORY_ERRORS.CATEGORY_02.message);
-      });
+    if (!parentId) {
+      return await this._categoryRepository.create({ name, level: 0 });
+    }
+
+    const foundParent = await this._categoryRepository.findOne({
+      id: parentId,
+    });
+
+    if (!foundParent) {
+      throw new NotFoundException(CATEGORY_ERRORS.CATEGORY_02.message);
+    }
 
     // Have check level of parent ? => can not create sub level 4, sub have 3 level : 0,1,2
     if (foundParent.level === 2) {
@@ -96,58 +94,17 @@ export class CategoryService {
     };
   }
 
-  //TODO go file via product controller
-  // async getCategoriesWithProducts(query: BaseQueryParams, id: string) {
-  //   const { page = 1, limit = 10, search, sort } = query;
-
-  //   const categogyIds = await this._categoryRepository.findOne(
-  //     {
-  //       id,
-  //     },
-  //     {
-  //       children: {
-  //         include: {
-  //           children: true,
-  //         },
-  //       },
-  //     }
-  //   );
-
-  //   console.log("list", categogyIds);
-  //   const ids = this._recusiveCategory(categogyIds);
-
-  //   const [count, data] = await Promise.all([
-  //     this._categoryRepository.count({
-  //       where: {
-  //         id: {
-  //           in: ids,
-  //         },
-  //       },
-  //     }),
-  //     this._categoryRepository.findMany({
-  //       where: {
-  //         id: {
-  //           in: ids,
-  //         },
-  //       },
-  //       include: {
-  //         children: {},
-  //       },
-  //       skip: (page - 1) * limit,
-  //       take: limit,
-  //     }),
-  //   ]);
-
-  //   return {
-  //     count,
-  //     data,
-  //   };
-  // }
-
-  // getCategoriesWithProducts
-
   async updateCategory(id: string, data: UpdateCategoryDto) {
-    await this.findCategoryById(id); // this function was check not found
+    const { name } = data;
+    const isCategory = await this.findCategoryById(id); // this function was check not found
+
+    if (!isCategory) {
+      throw new NotFoundException(CATEGORY_ERRORS.CATEGORY_04.message);
+    }
+
+    if (isCategory.name === name) {
+      throw new ConflictException(CATEGORY_ERRORS.CATEGORY_01.message);
+    }
 
     const result = await this._categoryRepository.update({
       where: {
@@ -188,15 +145,10 @@ export class CategoryService {
 
   /** ============================== Func general ============================== */
   async findCategoryById(id: string) {
-    return await this._categoryRepository
-      .findOneOrThrow({
-        where: {
-          id,
-        },
-      })
-      .catch(() => {
-        throw new NotFoundException(CATEGORY_ERRORS.CATEGORY_04.message);
-      });
+    return await this._categoryRepository.findOne(
+      { id },
+      { parent: true, id: true, level: true, name: true, parentId: true }
+    );
   }
 
   async findOne(

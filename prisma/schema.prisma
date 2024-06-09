@@ -6,44 +6,110 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-model Category {
-  id       String     @id @default(uuid()) @db.VarChar(36)
-  name     String     @db.VarChar(255)
-  parentId String?    @map("parent_id") @db.VarChar(36)
-  parent   Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
-  children Category[] @relation("CategoryToCategory")
 
-  level Int @default(0)
+model CartItem {
+    userId String @db.VarChar(36) @map("user_id")
+    productId String @db.VarChar(36) @map("product_id")
+    quantity Int
 
-  Product   Product? @relation(fields: [productId], references: [id])
-  productId String?  @db.VarChar(36)
-
-  @@map("categories")
+    user User @relation(fields: [userId], references:[id])
+    product Product @relation(fields: [productId], references:[id])
+    @@id([userId, productId])
+    @@map("cart-items")
 }
+
+model Category {
+    id       String              @id @default(uuid()) @db.VarChar(36)
+    name     String              @db.VarChar(255)
+    parentId String?             @map("parent_id") @db.VarChar(36)
+    parent   Category?           @relation("CategoryToCategory", fields: [parentId], references: [id])
+    children Category[]          @relation("CategoryToCategory")
+    products ProductOnCategory[]
+
+    level     Int       @default(0)
+    createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+    updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+    @@map("categories")
+}
+
+
+model OrderDetail {
+    orderId String @db.VarChar(36) @map("order_id")
+    productId String @db.VarChar(36) @map("product_id")
+    
+    order Order @relation(fields: [orderId], references: [id])
+    product Product @relation(fields: [productId], references: [id])
+
+    producName String @db.VarChar(255) @map("product_name")
+    productPrice String @db.VarChar(255) @map("product_price")
+    productQuantity String @db.VarChar(255) @map("product_quantity")
+    
+
+    @@id([orderId, productId])
+
+    @@map("order_details")
+}
+
+model Order {
+    id String @id @default(uuid()) @db.VarChar(36)
+    
+    // TODO có nên bỏ user id không
+    user User  @relation(fields: [userId], references: [id])
+    userId String @db.VarChar(36) @map("user_id") 
+    paymentMethod String @db.VarChar(100) @map("payment_method")
+    shippingAddress String @db.VarChar(255) @map("shipping_address")
+    shippingMethod String @db.VarChar(100) @map("shipping_method")
+    phone   String @db.VarChar(10)
+    status String @db.VarChar(30)
+    total Float
+    note String @db.VarChar(255) 
+
+    orderDetails OrderDetail[]
+    trackingOrders TrackingOrder[]   
+    @@map("orders")
+}
+
+
+
+
+model ProductOnCategory {
+    categoryId String @map("category_id") @db.VarChar(36)
+    productId  String @map("product_id") @db.VarChar(36)
+
+    category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    @@id([categoryId, productId])
+    @@map("products_on_catetories")
+}
+
 
 model Product {
-  id String @id @default(uuid()) @db.VarChar(36)
+    id String @id @default(uuid()) @db.VarChar(36)
 
-  name        String     @db.VarChar(255)
-  description String?    @db.Text
-  price       Float
-  image       String     @db.VarChar(255)
-  categories  Category[]
+    name        String  @db.VarChar(255)
+    description String? @db.Text
+    price       Float
+    image       String  @db.VarChar(255)
+    quantity    Int
+    isPublished Boolean @default(false) @map("is_publish")
+    sold        Int     @default(0) // cấm admin cập nhật
 
-  quantity Int
+    cartItems    CartItem[]
+    orderDetails OrderDetail[]
+    categories   ProductOnCategory[]
+    createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+    updatedAt    DateTime?           @updatedAt @map("updated_at") @db.Timestamptz(3)
+    deletedAt    DateTime?           @map("deleted_at") @db.Timestamptz(3)
 
-  isPublished Boolean @default(false) @map("is_publish")
-
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamptz(3)
-  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
-
-  @@map("products")
+    @@map("products")
 }
+
 
 model Seed {
   id        String   @id @default(uuid()) @db.VarChar(36)
@@ -51,6 +117,23 @@ model Seed {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   @@map("seeds")
+}
+
+
+model TrackingOrder {
+    // TODO có nên bỏ user id không
+    userId String @db.VarChar(36) @map("user_id")
+    orderId String @db.VarChar(36) @map("order_id")
+    user User  @relation( fields: [userId], references: [id])
+    order Order  @relation( fields: [orderId], references: [id])
+
+    status String @db.VarChar(20) // status : chờ xác nhận if( status === xác nhận) {hủy nếu muốn} => xác nhận => đang giao hàng => đã nhận hàng 
+    // <=> tùy tâm trạng admin sản phẩm có thể lổi
+    updatedAt DateTime  @default(now()) @map("updated_at") @db.Timestamptz(3)
+
+    @@id([orderId, status])
+
+    @@map("tracking_orders")
 }
 
 model User {
@@ -70,6 +153,13 @@ model User {
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt           DateTime? @updatedAt @map("updated_at") @db.Timestamptz(3)
   deletedAt           DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  // relationship
+  cartItem CartItem[] 
+  orders Order[]
+  trackingOrders TrackingOrder[]
+
+
 
   @@map("users")
 }

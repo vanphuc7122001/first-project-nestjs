@@ -1,0 +1,10 @@
+model ProductOnCategory {
+    categoryId String @map("category_id") @db.VarChar(36)
+    productId  String @map("product_id") @db.VarChar(36)
+
+    category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    @@id([categoryId, productId])
+    @@map("products_on_catetories")
+}

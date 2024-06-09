@@ -15,10 +15,7 @@ import {
 import { CreateProductValidator, UpdateProductValidator } from "../validators";
 import { ProductService } from "../services";
 import { CreateProductDto } from "../dtos/create-product.dto";
-import {
-  AdminJwtAccessAuthGuard,
-  SalerJwtAccessAuthGuard,
-} from "@modules/auth/guards";
+import { AdminJwtAccessAuthGuard } from "@modules/auth/guards";
 import { BaseQueryParamsValidator } from "@common/validators";
 import { BaseQueryParams } from "@common/dtos";
 import { Request } from "express";
@@ -71,15 +68,16 @@ export class ProductController {
     });
   }
 
-  @Get("categories/:id")
-  async getProductsByCategoryById(
+  @HttpCode(HttpStatusCode.Ok)
+  @Get("categories/:id/specific")
+  async getProductsByCategoryByIdSpecific(
     @Query(new JoiValidationPipe(BaseQueryParamsValidator))
     query: BaseQueryParams,
     @Req() req: Request,
     @Param("id") id: string
   ) {
     const { count, data } =
-      await this._productService.getProductsByCategoryById(query, id);
+      await this._productService.getProductsByCategoryByIdSpecific(query, id);
 
     return ResponseService.paginateResponse({
       count,

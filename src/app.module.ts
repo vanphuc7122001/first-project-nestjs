@@ -5,6 +5,7 @@ import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AuthModule } from "@modules/auth/auth.module";
 import { BullModule } from "@nestjs/bull";
+import { CartModule } from "@modules/cart/cart.module";
 import { CategoryModule } from "@modules/category/category.module";
 import { ConfigModule } from "@nestjs/config";
 import { ConfigSchema } from "@config/config.schema";
@@ -44,6 +45,7 @@ import { UserModule } from "@modules/user/user.module";
     UserModule,
     CategoryModule,
     ProductModule,
+    CartModule,
   ],
   controllers: [AppController],
   providers: [

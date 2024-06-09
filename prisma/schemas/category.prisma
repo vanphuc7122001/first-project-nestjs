@@ -1,10 +1,10 @@
 model Category {
-    id       String     @id @default(uuid()) @db.VarChar(36)
-    name     String     @db.VarChar(255)
-    parentId String?    @map("parent_id") @db.VarChar(36)
-    parent   Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
-    children Category[] @relation("CategoryToCategory")
-    products Product[]
+    id       String              @id @default(uuid()) @db.VarChar(36)
+    name     String              @db.VarChar(255)
+    parentId String?             @map("parent_id") @db.VarChar(36)
+    parent   Category?           @relation("CategoryToCategory", fields: [parentId], references: [id])
+    children Category[]          @relation("CategoryToCategory")
+    products ProductOnCategory[]
 
     level     Int       @default(0)
     createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)

@@ -1,9 +1,9 @@
 model TrackingOrder {
     // TODO có nên bỏ user id không
-    userId String @db.VarChar(36) @@map("user_id")
-    orderId String @db.VarChar(36) @@map("order_id")
-    user User  @relation("orderOfUser", fields: [userId], references: [id])
-    order Order  @relation("orderOfUser", fields: [orderId], references: [id])
+    userId String @db.VarChar(36) @map("user_id")
+    orderId String @db.VarChar(36) @map("order_id")
+    user User  @relation( fields: [userId], references: [id])
+    order Order  @relation( fields: [orderId], references: [id])
 
     status String @db.VarChar(20) // status : chờ xác nhận if( status === xác nhận) {hủy nếu muốn} => xác nhận => đang giao hàng => đã nhận hàng 
     // <=> tùy tâm trạng admin sản phẩm có thể lổi
@@ -11,5 +11,5 @@ model TrackingOrder {
 
     @@id([orderId, status])
 
-    @@map("tracking_order")
+    @@map("tracking_orders")
 }

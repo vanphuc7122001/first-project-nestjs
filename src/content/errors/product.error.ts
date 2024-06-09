@@ -15,4 +15,8 @@ export const PRODUCT_ERRORS = {
     code: "PRODUCT_04",
     message: "Can not add category to product when category !== level 2",
   },
+  PRODUCT_05: {
+    code: "PRODUCT_05",
+    message: "Can not create new product",
+  },
 };

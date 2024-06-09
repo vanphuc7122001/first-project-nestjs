@@ -35,6 +35,10 @@ export class ProductRepository {
     return await this._model.update(params);
   }
 
+  async upsert(params: Prisma.ProductUpsertArgs) {
+    return await this._model.upsert(params);
+  }
+
   async delete(where: Prisma.ProductWhereUniqueInput) {
     return await this._model.delete({ where });
   }
