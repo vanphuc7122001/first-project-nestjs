@@ -12,6 +12,7 @@ import { ConfigSchema } from "@config/config.schema";
 import { EmailModule } from "@shared/email/email.module";
 import { Environment } from "@common/enums";
 import { Module } from "@nestjs/common";
+import { OrderModule } from "@modules/order/order.module";
 import { PrismaModule } from "@shared/prisma/prisma.module";
 import { ProductModule } from "@modules/product/product.module";
 import { QueueModule } from "@shared/queue/queue.module";
@@ -46,6 +47,7 @@ import { UserModule } from "@modules/user/user.module";
     CategoryModule,
     ProductModule,
     CartModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [

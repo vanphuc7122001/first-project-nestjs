@@ -13,7 +13,7 @@ import { BaseQueryParams } from "@common/dtos";
 import { CategoryService } from "@modules/category/services";
 import { CreateProductDto } from "../dtos/create-product.dto";
 import { PrismaService } from "@shared/prisma/prisma.service";
-import { UpdateProductDto } from "../dtos/update-product.dto.";
+import { UpdateProductDto } from "../dtos/update-product.dto";
 import { isObject } from "@common/utils";
 import { randomUUID } from "crypto";
 
@@ -57,8 +57,6 @@ export class ProductService {
     if (foundProductName) {
       throw new NotFoundException(PRODUCT_ERRORS.PRODUCT_02.message);
     }
-
-    const productId = randomUUID();
 
     await this._productRepository.create({
       name,
@@ -467,5 +465,17 @@ export class ProductService {
     }
 
     return categoryIds;
+  }
+
+  /** ============================== Func using external ======================= */
+  async updateQuatityProduct(id: string, quantity: number) {
+    await this._productRepository.update({
+      where: {
+        id,
+      },
+      data: {
+        quantity,
+      },
+    });
   }
 }

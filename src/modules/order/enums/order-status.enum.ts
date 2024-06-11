@@ -1,0 +1,7 @@
+export enum OrderStatus {
+  NOT_COMFIRM = "NOT_COMFIRM",
+  CONFIRM = "CONFIRM",
+  IN_TRANSIT = "IN_TRANSIT",
+  RECEIVED = "RECEIVED",
+  CANCEL = "CANCEL",
+}

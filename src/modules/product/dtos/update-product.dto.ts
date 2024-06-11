@@ -7,5 +7,6 @@ export class UpdateProductDto {
   description?: string;
   image?: string;
   price?: number;
+  quantity?: number;
   categories?: categoryIds[];
 }

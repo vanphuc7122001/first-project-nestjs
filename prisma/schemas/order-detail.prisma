@@ -1,16 +1,14 @@
 model OrderDetail {
-    orderId String @db.VarChar(36) @map("order_id")
-    productId String @db.VarChar(36) @map("product_id")
-    
-    order Order @relation(fields: [orderId], references: [id])
+    orderId   String @map("order_id") @db.VarChar(36)
+    productId String @map("product_id") @db.VarChar(36)
+
+    order   Order   @relation(fields: [orderId], references: [id])
     product Product @relation(fields: [productId], references: [id])
 
-    producName String @db.VarChar(255) @map("product_name")
-    productPrice String @db.VarChar(255) @map("product_price")
-    productQuantity String @db.VarChar(255) @map("product_quantity")
-    
+    productName     String @map("product_name") @db.VarChar(255)
+    productPrice    Float  @map("product_price")
+    productQuantity Float  @map("product_quantity")
 
     @@id([orderId, productId])
-
     @@map("order_details")
 }

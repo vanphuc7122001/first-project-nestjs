@@ -39,42 +39,40 @@ model Category {
 
 
 model OrderDetail {
-    orderId String @db.VarChar(36) @map("order_id")
-    productId String @db.VarChar(36) @map("product_id")
-    
-    order Order @relation(fields: [orderId], references: [id])
+    orderId   String @map("order_id") @db.VarChar(36)
+    productId String @map("product_id") @db.VarChar(36)
+
+    order   Order   @relation(fields: [orderId], references: [id])
     product Product @relation(fields: [productId], references: [id])
 
-    producName String @db.VarChar(255) @map("product_name")
-    productPrice String @db.VarChar(255) @map("product_price")
-    productQuantity String @db.VarChar(255) @map("product_quantity")
-    
+    productName     String @map("product_name") @db.VarChar(255)
+    productPrice    Float  @map("product_price")
+    productQuantity Float  @map("product_quantity")
 
     @@id([orderId, productId])
-
     @@map("order_details")
 }
 
+
 model Order {
     id String @id @default(uuid()) @db.VarChar(36)
-    
-    // TODO có nên bỏ user id không
-    user User  @relation(fields: [userId], references: [id])
-    userId String @db.VarChar(36) @map("user_id") 
-    paymentMethod String @db.VarChar(100) @map("payment_method")
-    shippingAddress String @db.VarChar(255) @map("shipping_address")
-    shippingMethod String @db.VarChar(100) @map("shipping_method")
-    phone   String @db.VarChar(10)
-    status String @db.VarChar(30)
-    total Float
-    note String @db.VarChar(255) 
 
-    orderDetails OrderDetail[]
-    trackingOrders TrackingOrder[]   
+    user            User    @relation(fields: [userId], references: [id])
+    userId          String  @map("user_id") @db.VarChar(36)
+    paymentMethod   String  @map("payment_method") @db.VarChar(100)
+    shippingAddress String  @map("shipping_address") @db.VarChar(255)
+    shippingMethod  String  @map("shipping_method") @db.VarChar(100)
+    phone           String  @db.VarChar(10)
+    status          String  @db.VarChar(30)
+    totalBefore     Float   @map("total_before")
+    totalAfter      Float   @map("totla_after")
+    note            String? @db.VarChar(255)
+
+    orderDetails   OrderDetail[]
+    trackingOrders TrackingOrder[]
+
     @@map("orders")
 }
-
-
 
 
 model ProductOnCategory {

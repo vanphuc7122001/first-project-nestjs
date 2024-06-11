@@ -20,7 +20,7 @@ import { BaseQueryParamsValidator } from "@common/validators";
 import { BaseQueryParams } from "@common/dtos";
 import { Request } from "express";
 import { ResponseService } from "@shared/response/response.service";
-import { UpdateProductDto } from "../dtos/update-product.dto.";
+import { UpdateProductDto } from "../dtos/update-product.dto";
 import { HttpStatusCode } from "axios";
 import { AuthGuard } from "@nestjs/passport";
 import {
